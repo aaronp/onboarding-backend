@@ -146,8 +146,7 @@ case class MakePizzaRequest(quantity: Int, toppings: List[String]) derives ReadW
 }
 
 @scala.scalajs.js.annotation.JSExportTopLevel("initLayout")
-def initLayout(navId : String, myLayout: GoldenLayout) = {
-
+def initLayout(navId: String, myLayout: GoldenLayout) = {
 
   // global.window.initLayout = initLayout
   global.window.createNewComponent = createNewComponent
@@ -189,4 +188,3 @@ def initLayout(navId : String, myLayout: GoldenLayout) = {
 
   myLayout.init()
 }
-
