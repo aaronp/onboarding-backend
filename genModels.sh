@@ -9,7 +9,12 @@ genModels() {
         dirname=$(basename "$dir")
 
         # Print the directory being processed
-        echo "Processing directory $dir (name: $dirname)"
+
+        echo ""
+        echo "   +-------------------------------------------------"
+        echo "   + Processing $dirname"
+        echo "   +-------------------------------------------------"
+        echo ""
 
         # Run the Docker command with the subdirectory mounted
 		docker run --rm -v "${PWD}:/local" openapitools/openapi-generator-cli:latest generate \
@@ -19,6 +24,8 @@ genModels() {
 			-o /local/target/$dir; \
 
         echo "Publishing $dirname"
-		cd "target/schemas/$dirname" && sbt publishLocal
+		pushd "target/schemas/$dirname" 
+        sbt publishLocal
+        popd
     done
 }

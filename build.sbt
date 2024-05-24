@@ -31,6 +31,7 @@ lazy val commonSettings = Seq(
   //
   // libraryDependencies += "onboarding" %%% "kind" % "0.0.1",
   // ================================================================================================
+  libraryDependencies += "kind" %%% "kind-docstore" % "0.0.4",
   libraryDependencies ++= Seq(
     "org.scalatest" %%% "scalatest" % "3.2.18" % Test
   )

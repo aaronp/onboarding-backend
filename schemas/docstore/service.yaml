@@ -1,0 +1,254 @@
+openapi: 3.0.3
+info:
+  title: Document Storage API
+  description: API for storing, retrieving, updating, and deleting JSON documents.
+  version: 1.1.0
+paths:
+  /doc/{path}:
+    post:
+      summary: Save JSON data to a specified path
+      description: Save JSON data to the specified path.
+      operationId: saveDocument
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: The path where the JSON data should be saved.
+          schema:
+            type: string
+      requestBody:
+        description: JSON data to be saved
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Document saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Document saved successfully
+    get:
+      summary: Retrieve JSON data from a specified path
+      description: Retrieve JSON data from the specified path.
+      operationId: getDocument
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: The path from which the JSON data should be retrieved.
+          schema:
+            type: string
+        - name: version
+          in: query
+          required: false
+          description: The version of the document to retrieve.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Document not found
+    patch:
+      summary: Update JSON data at a specified path
+      description: Update JSON data at the specified path.
+      operationId: updateDocument
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: The path where the JSON data should be updated.
+          schema:
+            type: string
+      requestBody:
+        description: JSON data to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Document updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Document updated successfully
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Document not found
+    delete:
+      summary: Delete JSON data at a specified path
+      description: Delete JSON data at the specified path.
+      operationId: deleteDocument
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: The path where the JSON data should be deleted.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Document deleted successfully
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Document not found
+
+  /diff:
+    post:
+      summary: Compare two JSON documents
+      description: Compare two JSON documents and return the differences.
+      operationId: compareDocuments
+      requestBody:
+        description: JSON documents to be compared
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                left:
+                  type: string
+                  description: The left JSON document
+                  example: '{"hello": "world"}'
+                right:
+                  type: string
+                  description: The right JSON document
+                  example: '{"hello": "earth"}'
+      responses:
+        '200':
+          description: Differences between the documents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  differences:
+                    type: object
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid input
+
+  /metadata/{path}:
+    parameters:
+      - name: path
+        in: path
+        required: true
+        description: The path where the JSON data should be retrieved.
+        schema:
+          type: string
+    get:
+      summary: Retrieve metadata information
+      description: Retrieve metadata information such as last updated and latest version.
+      operationId: getMetadata
+      responses:
+        '200':
+          description: Metadata retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                    example: '2024-05-20T15:30:00Z'
+                  latestVersion:
+                    type: string
+                    example: '1.0.0'
+
+  /copy:
+    post:
+      summary: Copy JSON data from one path to another
+      description: Copy JSON data from one path to another.
+      operationId: copyDocument
+      requestBody:
+        description: Paths for copying the document
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                  description: The source path of the document
+                  example: 'foo/bar'
+                to:
+                  type: string
+                  description: The destination path of the document
+                  example: 'foo/baz'
+      responses:
+        '200':
+          description: Document copied successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Document copied successfully
+        '404':
+          description: Source document not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Source document not found

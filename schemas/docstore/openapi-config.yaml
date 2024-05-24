@@ -1,0 +1,8 @@
+artifactId: kind-docstore
+artifactVersion: "0.0.1"
+groupId: kind
+packageName: kind.onboarding.docstore
+modelPackage: kind.onboarding.docstore.model
+apiPackage: kind.onboarding.docstore.api
+gitRepoId: onboarding-backend
+gitUserId: aaronp

@@ -1,0 +1,418 @@
+{
+  "openapi" : "3.0.3",
+  "info" : {
+    "description" : "API for storing, retrieving, updating, and deleting JSON documents.",
+    "title" : "Document Storage API",
+    "version" : "1.1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "paths" : {
+    "/doc/{path}" : {
+      "delete" : {
+        "description" : "Delete JSON data at the specified path.",
+        "operationId" : "deleteDocument",
+        "parameters" : [ {
+          "description" : "The path where the JSON data should be deleted.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/deleteDocument_200_response"
+                }
+              }
+            },
+            "description" : "Document deleted successfully"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/getDocument_404_response"
+                }
+              }
+            },
+            "description" : "Document not found"
+          }
+        },
+        "summary" : "Delete JSON data at a specified path"
+      },
+      "get" : {
+        "description" : "Retrieve JSON data from the specified path.",
+        "operationId" : "getDocument",
+        "parameters" : [ {
+          "description" : "The path from which the JSON data should be retrieved.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        }, {
+          "description" : "The version of the document to retrieve.",
+          "explode" : true,
+          "in" : "query",
+          "name" : "version",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "form"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "Document retrieved successfully"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/getDocument_404_response"
+                }
+              }
+            },
+            "description" : "Document not found"
+          }
+        },
+        "summary" : "Retrieve JSON data from a specified path"
+      },
+      "patch" : {
+        "description" : "Update JSON data at the specified path.",
+        "operationId" : "updateDocument",
+        "parameters" : [ {
+          "description" : "The path where the JSON data should be updated.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object"
+              }
+            }
+          },
+          "description" : "JSON data to be updated",
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/updateDocument_200_response"
+                }
+              }
+            },
+            "description" : "Document updated successfully"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/getDocument_404_response"
+                }
+              }
+            },
+            "description" : "Document not found"
+          }
+        },
+        "summary" : "Update JSON data at a specified path"
+      },
+      "post" : {
+        "description" : "Save JSON data to the specified path.",
+        "operationId" : "saveDocument",
+        "parameters" : [ {
+          "description" : "The path where the JSON data should be saved.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object"
+              }
+            }
+          },
+          "description" : "JSON data to be saved",
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/saveDocument_200_response"
+                }
+              }
+            },
+            "description" : "Document saved successfully"
+          }
+        },
+        "summary" : "Save JSON data to a specified path"
+      }
+    },
+    "/diff" : {
+      "post" : {
+        "description" : "Compare two JSON documents and return the differences.",
+        "operationId" : "compareDocuments",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/compareDocuments_request"
+              }
+            }
+          },
+          "description" : "JSON documents to be compared",
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/compareDocuments_200_response"
+                }
+              }
+            },
+            "description" : "Differences between the documents"
+          },
+          "400" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/compareDocuments_400_response"
+                }
+              }
+            },
+            "description" : "Invalid input"
+          }
+        },
+        "summary" : "Compare two JSON documents"
+      }
+    },
+    "/metadata/{path}" : {
+      "get" : {
+        "description" : "Retrieve metadata information such as last updated and latest version.",
+        "operationId" : "getMetadata",
+        "parameters" : [ {
+          "description" : "The path where the JSON data should be retrieved.",
+          "explode" : false,
+          "in" : "path",
+          "name" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "style" : "simple"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/getMetadata_200_response"
+                }
+              }
+            },
+            "description" : "Metadata retrieved successfully"
+          }
+        },
+        "summary" : "Retrieve metadata information"
+      }
+    },
+    "/copy" : {
+      "post" : {
+        "description" : "Copy JSON data from one path to another.",
+        "operationId" : "copyDocument",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/copyDocument_request"
+              }
+            }
+          },
+          "description" : "Paths for copying the document",
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/copyDocument_200_response"
+                }
+              }
+            },
+            "description" : "Document copied successfully"
+          },
+          "404" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/copyDocument_404_response"
+                }
+              }
+            },
+            "description" : "Source document not found"
+          }
+        },
+        "summary" : "Copy JSON data from one path to another"
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "copyDocument_200_response" : {
+        "properties" : {
+          "message" : {
+            "example" : "Document copied successfully",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "updateDocument_200_response" : {
+        "properties" : {
+          "message" : {
+            "example" : "Document updated successfully",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "getMetadata_200_response" : {
+        "properties" : {
+          "lastUpdated" : {
+            "example" : "2024-05-20T15:30:00Z",
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "latestVersion" : {
+            "example" : "1.0.0",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "copyDocument_404_response" : {
+        "properties" : {
+          "message" : {
+            "example" : "Source document not found",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "compareDocuments_200_response" : {
+        "properties" : {
+          "differences" : {
+            "type" : "object"
+          }
+        },
+        "type" : "object"
+      },
+      "compareDocuments_request" : {
+        "properties" : {
+          "left" : {
+            "description" : "The left JSON document",
+            "example" : "{\"hello\": \"world\"}",
+            "type" : "string"
+          },
+          "right" : {
+            "description" : "The right JSON document",
+            "example" : "{\"hello\": \"earth\"}",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "saveDocument_200_response" : {
+        "properties" : {
+          "message" : {
+            "example" : "Document saved successfully",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "compareDocuments_400_response" : {
+        "properties" : {
+          "message" : {
+            "example" : "Invalid input",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "copyDocument_request" : {
+        "properties" : {
+          "from" : {
+            "description" : "The source path of the document",
+            "example" : "foo/bar",
+            "type" : "string"
+          },
+          "to" : {
+            "description" : "The destination path of the document",
+            "example" : "foo/baz",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "getDocument_404_response" : {
+        "properties" : {
+          "message" : {
+            "example" : "Document not found",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "deleteDocument_200_response" : {
+        "properties" : {
+          "message" : {
+            "example" : "Document deleted successfully",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  }
+}
