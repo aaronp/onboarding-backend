@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>kind</title>
+    <link rel="stylesheet" href="https://golden-layout.com/files/latest/css/goldenlayout-base.css">
+    <link rel="stylesheet" href="https://golden-layout.com/files/latest/css/goldenlayout-dark-theme.css">
+
+    <!-- weird .. these are brought in my our main.js module (npm), but we have to include here.
+         oh well .... the interweb is a mystery to me.    
+    -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://golden-layout.com/files/latest/js/goldenlayout.min.js"></script>
+  </head>
+  <body>
+
+    <script type="module" src="/main.js"></script>
+    <header>Logic-First Example</header>
+    <div class="content">
+        <div class="drawer" ><ul id="drawer" /></div>
+        <div id="layoutContainer"></div>
+    </div>
+    <footer>Status: ✅</footer>
+
+
+
+    <script type="module">
+      import { initLayout } from './js/target/scala-3.4.1/app-fastopt/main.mjs';
+
+      var config = {
+          content: [{
+              type: 'row',
+              content: [{
+                  type: 'component',
+                  title: "Initial Component",
+                  componentName: 'createNewComponent',
+                  componentState: {  }
+              }]
+          }]
+      };
+
+      var config = {
+            content: [{
+                type: 'row',
+                content: [{
+                    type: 'component',
+                    title: "Initial Component",
+                    componentName: 'createNewComponent',
+                    componentState: {  }
+                }]
+            }]
+        };
+      var myLayout = new GoldenLayout(config, document.getElementById('layoutContainer'));
+
+      // w/ scala.js, it's easier to just have one central component, so *all* components are created with
+      // 'createNewComponent'
+      myLayout.registerComponent('createNewComponent', function(container, state) {
+        createNewComponent(container, state);
+      });
+
+
+      myLayout.on('itemDestroyed', function(item) {
+        if (item.type === 'component') {
+          // item.config.componentState.id may be undefined for the initial component.
+          // the UIComponent is responsible for setting the id.
+          onComponentDestroyed(`${item.config.componentState.id}`);
+        }
+      });
+      myLayout.on('itemCreated', function(item) {
+        if (item.config.componentName != undefined) {
+          // item.config.componentState.id may be undefined for the initial component.
+          // the UIComponent is responsible for setting the id.
+          onComponentCreated(`${item.config.componentState.id}`);
+        }
+      });
+
+      window.myLayout = myLayout;
+      document.addEventListener('DOMContentLoaded', () => {
+
+        initLayout("drawer", myLayout);
+      });
+
+
+  </script>
+
+  </body>
+</html>

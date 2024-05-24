@@ -1,0 +1,222 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+header {
+  height: 100px;
+  background-color: black;
+  color: white;
+  text-align: left;
+  padding-left: 40px;
+  line-height: 100px;
+}
+footer {
+  height: 20px;
+  background-color: black;
+  color: white;
+  text-align: left;
+  padding-left: 4px;
+  line-height: 20px;
+}
+.content {
+  display: flex;
+  height: calc(100% - 120px); /* Subtract header and footer height */
+}
+.drawer {
+  width: 200px;
+  background-color: #ddd;
+  /* Fixed height takes remaining height minus header and footer */
+  height: calc(100vh - 120px);
+}
+#layoutContainer {
+  flex-grow: 1;
+  height: 100%;
+}
+ul {
+  margin-left: 6px;
+  padding: 0;
+}
+.draggable {
+  width: 180px;
+  height: 60px;
+  margin-bottom: 10px;
+  background-color: black;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #000;
+  cursor: grab; /* Cursor shows a grab hand */
+}
+.draggable:active {
+  cursor: grabbing; /* Cursor shows a grabbing hand */
+}
+
+.subtitle {
+  color: white;
+}
+
+/* out own material design */
+.btn {
+  background-color: #2196F3; /* Default blue background */
+  color: #fff; /* White text */
+  padding: 0 16px; /* Padding on the sides */
+  margin: 0 8px;
+}
+
+.big-input {
+  margin: 10px;
+  width: calc(100vh - 20px);
+}
+.label {
+  margin: 10px;
+  font-size: 1.5em;
+  color: white;
+}
+
+.modal { display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+.modal-content { background: grey; padding: 20px; border-radius: 5px; }
+.modal-show { display: block; position: absolute; left: calc(10vw); top: calc(20vh)}
+.btn { padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+
+
+/* Table Container */
+.table-container {
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+}
+
+/* Table Header */
+thead {
+  background-color: #f8f8f8;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+thead th {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Table Body */
+tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+tbody tr:nth-child(odd) {
+  background-color: #f1f1f1d3;
+}
+
+tbody tr:hover {
+  background-color: #f1f1f1ae;
+}
+
+tbody td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  color: #555;
+}
+
+/* Overall Appearance */
+table, th, td {
+  border: 1px solid #ddd;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+}
+
+/* Hover Effect */
+tbody tr:hover td {
+  background-color: #eef;
+  cursor: pointer;
+}
+
+thead th:hover {
+  background-color: rgb(155, 202, 249);
+  cursor: pointer;
+}
+
+/* Sticky Header */
+thead th {
+  background-color: #f4f4f4;
+  position: sticky;
+  top: 0;
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Table */
+@media screen and (max-width: 600px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead tr {
+    display: none;
+  }
+
+  tr {
+    margin-bottom: 15px;
+  }
+
+  td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+
+  td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: 50%;
+    padding-left: 15px;
+    font-weight: bold;
+    text-align: left;
+  }
+}
+
+/* resize table cols */
+
+th .resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 15px;
+  cursor: col-resize;
+  z-index: 1;
+  background-color: #130303;
+}
+
+th .resize-handle:hover {
+  background-color: #ccc;
+}

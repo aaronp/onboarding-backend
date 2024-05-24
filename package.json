@@ -1,0 +1,25 @@
+{
+  "name": "kind",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "package": "node package.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "devDependencies": {
+    "@scala-js/vite-plugin-scalajs": "^1.0.0",
+    "gh-pages": "^6.1.1",
+    "vite": "^4.1.0"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "golden-layout": "^2.6.0",
+    "jquery": "^3.7.1",
+    "mermaid": "^10.9.0"
+  }
+}

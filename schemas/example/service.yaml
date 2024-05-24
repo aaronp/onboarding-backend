@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  title: kind
+  description: Basic API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /v1/contract:
+    post:
+      summary: Create a new draft contract
+      description: This endpoint allows creating a new draft contract with specified details.
+      operationId: createContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstCounterparty
+                - secondCounterparty
+                - terms
+                - conditions
+              properties:
+                firstCounterparty:
+                  type: string
+                  description: The name of the first counterparty in the contract.
+                secondCounterparty:
+                  type: string
+                  description: The name of the second counterparty in the contract.
+                terms:
+                  type: string
+                  description: The terms agreed upon in the contract.
+                conditions:
+                  type: string
+                  description: The conditions of the contract.
+      responses:
+        '200':
+          description: Draft contract created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDraftResponse'
+        '400':
+          description: Invalid input received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: A message detailing the error with the provided input.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: A message detailing an internal error that prevented the contract creation.
+
+  /v1/sign:
+    post:
+      summary: Receive signature status for draft contract
+      description: This endpoint receives references for a draft contract and returns signature status for each counterparty.
+      operationId: signDraftContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - referenceA
+                - referenceB
+              properties:
+                referenceA:
+                  type: string
+                  description: Reference identifier for counterparty A.
+                referenceB:
+                  type: string
+                  description: Reference identifier for counterparty B.
+      responses:
+        '200':
+          description: Signature status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - counterpartyASigned
+                  - counterpartyBSigned
+                properties:
+                  counterpartyASigned:
+                    type: boolean
+                    description: Indicates if counterparty A has signed the contract.
+                  counterpartyBSigned:
+                    type: boolean
+                    description: Indicates if counterparty B has signed the contract.
+                  counterpartyANotSignedReason:
+                    type: string
+                    description: Reason why counterparty A has not signed the contract.
+                    nullable: true
+                  counterpartyBNotSignedReason:
+                    type: string
+                    description: Reason why counterparty B has not signed the contract.
+                    nullable: true
+
+        '400':
+          description: Invalid input received
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: A message detailing the error with the provided input.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: A message detailing an internal error.
+
+components:
+  schemas:
+    CreateDraftResponse:
+      type: object
+      properties:
+        firstCounterpartyRef:
+          type: string
+          description: The reference identifier for the first counterparty.
+        secondCounterpartyRef:
+          type: string
+          description: The reference identifier for the second counterparty.
