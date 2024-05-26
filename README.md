@@ -1,57 +1,27 @@
-# kind Logic-First Project
+# OnBoarding Backend
 
-This project was generated from the [kindservices/logic-first.g8](https://github.com/kindservices/logic-first.g8) template.
+This is the back-end to the sibling [onboarding](https://github.com/aaronp/onboarding) project.
 
-See [Kind Services](https://www.kindservices.co.uk/) for more on a Logic-First approach to executable architecture.
+## Development
 
-# Building
+For active development, this backend can be run within the front-end project, providing an immediate feedback DevX experience.
 
-The accompanying [Makefile](./Makefile) has:
+Run:
 
-### generateModels - create REST stubs
-`make generateModels` will iterate through all the (./schemas)[./schemas] subdirectories, expecing a `service.yml` and `openapi-config.yml` in each.
-
-It will generate and the package up the scala stubs for each so that they can be used within this project in both the JVM and JS projects
-
-To add a new service/generated data model, just copy and modify the existing (example)[./schemas/example]
-
-### runUI - quickly see your changes in the browser
-For local development, the typical workflow is:
-
-Continually compile the project:
-```sh
-sbt "project appjs" ~fastLinkJS
+```shell
+sbt
+project appJS 
+~fastLinkJS
 ```
 
-And then serve it up using vite
-`make runUI` 
+which produces `./js/target/scala-3.4.1/app-fastopt/main.mjs`
 
+That output file is then included in the onboarding package, invoking service calls directly
 
-### packageUI - package up the javascript form for your project
-`make packageUI` will package up a zip file which you can then extract and serve by using either:
+## Production
 
-NPM:
-```sh
-npm install -g serve
-serve -s dist
-```
+For production builds, the backend and frontend services are deployed onto kubernetes.
 
-or Python3:
-```sh
-python3 -m http.server
-```
+The injected interfaces used in production are then implemented by REST calls as opposed to direct invocation.
 
-
-## On the JVM
-
-This project is built using [sbt](https://www.scala-sbt.org/):
-
-```sh
-sbt ~compile
-```
-
-Or, for a zero-install (but likely much slower) docker build:
-
-```sh
-docker run -it --rm -v ${PWD}:/app -w /app hseeberger/scala-sbt:8u222_1.3.5_2.13.1 sbt compile
-```
+See [here for more](./docs/building.md) for more details.
