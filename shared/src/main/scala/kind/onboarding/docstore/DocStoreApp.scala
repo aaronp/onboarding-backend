@@ -5,7 +5,19 @@ import kind.logic.telemetry.*
 import kind.onboarding.docstore.model.*
 import kind.onboarding.docstore.api.*
 
-trait DocStoreApp extends DefaultService
+trait DocStoreApp extends DefaultService {
+
+  /** Save the document at the given path, where the previous version is still kept (the documents
+    * are saved at sub-paths under the given path)
+    *
+    * NOTE: we could make this the default behaviour, or add it to the REST service
+    */
+  def saveDocumentVersioned(path: String, body: Json): String
+  def updateDocumentVersioned(path: String, body: Json): String
+
+  def getDocumentLatest(path: String): Json | GetDocument404Response
+
+}
 
 object DocStoreApp {
 
@@ -62,9 +74,53 @@ object DocStoreApp {
     override def listChildren(path: String): List[String] =
       run(DocStoreLogic.listChildren(path))
         .execOrThrow()
-        .filter(_.trim.nonEmpty) // hack - we should fix '.asPath'
 
     override def getMetadata(path: String) = run(DocStoreLogic.metadata(path)).execOrThrow()
+
+    /** Save the document at the given path, where the previous version is still kept (the documents
+      * are saved at sub-paths under the given path)
+      *
+      * NOTE: we could make this the default behaviour, or add it to the REST service
+      */
+    override def saveDocumentVersioned(path: String, body: Json): String = {
+      run {
+        for {
+          kids <- DocStoreLogic.listChildren(path)
+          newPath = s"${chomp(path)}/${asVersion(kids.size)}"
+          result <- DocStoreLogic.save(newPath, body)
+        } yield newPath
+      }.execOrThrow()
+    }
+
+    /** To write the 'update' (or patch) in terms of our other functions, we need to load the
+      * latest, save that at the latest path, and then do an update at that latest version path
+      * @param path
+      *   the path to patch
+      * @param body
+      *   the data to update against the previous data
+      * @return
+      *   the path of the new document
+      */
+    override def updateDocumentVersioned(path: String, body: Json) = {
+      getDocumentLatest(path) match {
+        case data: Json =>
+          val newPath = saveDocumentVersioned(path, data)
+          updateDocument(newPath, body)
+          newPath
+        case notFound: GetDocument404Response => ""
+      }
+    }
+    private def asVersion(size: Int) = s"v$size"
+    private def chomp(path: String)  = if path.endsWith("/") then path.init else path
+
+    override def getDocumentLatest(path: String): Json | GetDocument404Response = {
+      run {
+        for {
+          kids   <- DocStoreLogic.listChildren(path)
+          result <- DocStoreLogic.get(s"${chomp(path)}", kids.lastOption)
+        } yield result
+      }.execOrThrow()
+    }
 
     override def saveDocument(path: String, body: Json): SaveDocument200Response = {
       run(DocStoreLogic.save(path, body)).execOrThrow()

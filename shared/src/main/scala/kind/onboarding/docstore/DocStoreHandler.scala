@@ -79,24 +79,14 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       path: String,
       versionOpt: Option[String]
   ) = {
-    versionOpt match {
-      case None =>
-        val task = for {
-          latest <- ref.get
-          value = latest.at(path.asPath)
-          data  = value.map(_.data).getOrElse(ujson.Null)
-        } yield data
+    val fullPath = path.asPath.filter(_.nonEmpty)
+    val task = for {
+      latest <- ref.get
+      value = latest.at(fullPath ++ versionOpt.toList)
+      data  = value.map(_.data).getOrElse(ujson.Null)
+    } yield data
 
-        task.taskAsResultTraced(DocStoreApp.Id, command)
-      case Some(version) =>
-        val task = for {
-          latest <- ref.get
-          value = latest.at(path.asPath :+ s"version-${version}")
-          data  = value.map(_.data).getOrElse(ujson.Null)
-        } yield data
-
-        task.taskAsResultTraced(DocStoreApp.Id, command)
-    }
+    task.taskAsResultTraced(DocStoreApp.Id, command)
   }
 
   def onPatchDocument(command: DocStoreLogic.UpdateDocument, path: String, newValue: Json) = {
