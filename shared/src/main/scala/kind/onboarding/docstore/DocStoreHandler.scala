@@ -7,9 +7,13 @@ import kind.logic.json.*
 import kind.logic.*
 
 object DocStoreHandler {
-  def apply() = {
-    val ref = Ref.make(PathTree.forPath("")).execOrThrow()
-    new DocStoreHandler(ref) {}
+  def apply(db: PathTree = PathTree.forPath("")): InMemory = {
+    val ref = Ref.make(db).execOrThrow()
+    InMemory(ref)
+  }
+
+  case class InMemory(ref: Ref[PathTree]) extends DocStoreHandler(ref) {
+    def asTree = ref.get
   }
 }
 
@@ -17,6 +21,11 @@ object DocStoreHandler {
   */
 trait DocStoreHandler(ref: Ref[PathTree]) {
   import PathTree.asPath
+
+  //   def asMermaid(quantity: Int, toppings: List[String]): String = {
+  //     given telemetry: Telemetry = Telemetry()
+  //     defaultProgram.orderPizzaAsMermaid(quantity, toppings)._2
+  //   }
 
   def onListChildren(command: DocStoreLogic.ListChildren, path: String): Result[Seq[String]] = {
     def kids(latest: PathTree, pathList: Seq[String]) = {
@@ -150,8 +159,3 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       }
   }
 }
-
-//   def asMermaid(quantity: Int, toppings: List[String]): String = {
-//     given telemetry: Telemetry = Telemetry()
-//     defaultProgram.orderPizzaAsMermaid(quantity, toppings)._2
-//   }
