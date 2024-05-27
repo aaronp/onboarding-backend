@@ -2,8 +2,29 @@ openapi: 3.0.3
 info:
   title: Document Storage API
   description: API for storing, retrieving, updating, and deleting JSON documents.
-  version: 1.1.0
+  version: 2.0.0
 paths:
+  /children/{path}:
+    get:
+      operationId: listChildren
+      summary: Fetch directories under a given path
+      description: Returns an array of strings representing all directories found under the given path.
+      parameters:
+        - name: path
+          in: path
+          required: true
+          description: The base path to search for directories
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of directories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
   /doc/{path}:
     post:
       summary: Save JSON data to a specified path

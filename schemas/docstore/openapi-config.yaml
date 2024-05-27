@@ -1,5 +1,5 @@
 artifactId: kind-docstore
-artifactVersion: "0.0.1"
+artifactVersion: "0.1.1"
 groupId: kind
 packageName: kind.onboarding.docstore
 modelPackage: kind.onboarding.docstore.model

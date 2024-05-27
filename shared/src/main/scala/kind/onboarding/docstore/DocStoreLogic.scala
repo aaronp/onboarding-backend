@@ -11,6 +11,7 @@ enum DocStoreLogic[A]:
       extends DocStoreLogic[CopyDocument200Response | CopyDocument404Response]
   case DeleteDocument(path: String)
       extends DocStoreLogic[DeleteDocument200Response | GetDocument404Response]
+  case ListChildren(path: String) extends DocStoreLogic[List[String]]
   case GetDocument(path: String, version: Option[String])
       extends DocStoreLogic[Json | GetDocument404Response]
   case GetMetadata(path: String)              extends DocStoreLogic[GetMetadata200Response]
@@ -38,6 +39,9 @@ object DocStoreLogic {
   ): Program[DocStoreLogic, DeleteDocument200Response | GetDocument404Response] = {
     DeleteDocument(path).asProgram
   }
+  def listChildren(
+      path: String
+  ): Program[DocStoreLogic, List[String]] = ListChildren(path).asProgram
 
   def get(
       path: String,

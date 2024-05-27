@@ -50,23 +50,26 @@ object DocStoreApp {
         copyDocumentRequest: CopyDocumentRequest
     ) = run(DocStoreLogic.copyPaths(copyDocumentRequest)).execOrThrow()
 
-    def deleteDocument(
-        path: String
-    ) = run(DocStoreLogic.delete(path)).execOrThrow()
+    override def deleteDocument(path: String) = run(DocStoreLogic.delete(path)).execOrThrow()
 
-    def getDocument(
+    override def getDocument(
         path: String,
         version: Option[String]
     ): Json | GetDocument404Response = {
       run(DocStoreLogic.get(path, version)).execOrThrow()
     }
 
-    def getMetadata(path: String) = run(DocStoreLogic.metadata(path)).execOrThrow()
+    override def listChildren(path: String): List[String] =
+      run(DocStoreLogic.listChildren(path))
+        .execOrThrow()
+        .filter(_.trim.nonEmpty) // hack - we should fix '.asPath'
 
-    def saveDocument(path: String, body: Json): SaveDocument200Response = {
+    override def getMetadata(path: String) = run(DocStoreLogic.metadata(path)).execOrThrow()
+
+    override def saveDocument(path: String, body: Json): SaveDocument200Response = {
       run(DocStoreLogic.save(path, body)).execOrThrow()
     }
-    def updateDocument(
+    override def updateDocument(
         path: String,
         body: Json
     ) = run(DocStoreLogic.update(path, body)).execOrThrow()
