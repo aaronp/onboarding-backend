@@ -29,7 +29,7 @@ case class Services(
     *   the name
     */
   def saveDatabaseAs(name: String) = {
-    val dump = databaseDump()
+    val dump  = databaseDump()
     val value = write(dump)
     dom.window.localStorage.setItem(name, value)
   }
@@ -37,6 +37,11 @@ case class Services(
   def snapshotDatabase() = saveDatabaseAs("default")
 
   def listUsers() = docStore.listChildren("users").toJSArray
+
+  def getUser(name: String) = docStore.getDocument(s"users/$name", None) match {
+    case found: ujson.Value => found.asJavascriptObject
+    case other              => ujson.Null.asJavascriptObject
+  }
 
   def createNewUser(json: String): Json = {
     json.as[User] match {
