@@ -7,6 +7,7 @@ import kind.onboarding.docstore.*
 import kind.onboarding.docstore.model.SaveDocument200Response
 import org.scalajs.dom
 import upickle.default.*
+import kind.onboarding.refdata.*
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
@@ -24,7 +25,25 @@ case class Services(
     telemetry: Telemetry
 ) {
 
-  def listProducts(): Seq[js.Dynamic] = products.reader.products().execOrThrow().map(_.asJSON)
+  def saveProducts(data: js.Dynamic) = {
+    data.as[Seq[Product]] match {
+      case Success(newValue) =>
+        Try(products.set(newValue).execOrThrow()) match {
+          case Success(_)   => ActionResult("saved").asJSON
+          case Failure(err) => ActionResult.fail(s"Error saving: $err", err.getMessage).asJSON
+        }
+      case Failure(err) =>
+        ActionResult.fail(s"error parsing data: >${data.asJsonString}< : $err").asJSON
+    }
+  }
+
+  def listProducts(): Seq[js.Dynamic] =
+    products
+      .products()
+      .execOrThrow()
+      .map { case product @ Product(name, _) =>
+        product.mergeAsJSON(LabeledValue(name))
+      }
 
   private def databaseDump(): PathTree = database.asTree.execOrThrow()
 
@@ -49,27 +68,14 @@ case class Services(
 
   def createNewUser(json: String): Json = {
     json.as[User] match {
-      case Failure(err) =>
-        ujson.Obj(
-          "success" -> false,
-          "message" ->
-            s"Error parsing json as user: >${json}<"
-        )
+      case Failure(err) => ActionResult.fail(s"Error parsing json as user: >${json}<").asUJson
       case Success(user) =>
         val id = user.name
         Try(docStore.saveDocument(s"users/${id}", user.asJson)) match {
           case Success(SaveDocument200Response(msg)) =>
-            ujson.Obj(
-              "success" -> true,
-              "message" ->
-                msg.getOrElse(s"Created user: $id")
-            )
+            ActionResult(msg.getOrElse(s"Created user: $id")).asUJson
           case Failure(saveErr) =>
-            ujson.Obj(
-              "success" -> false,
-              "message" ->
-                s"Error saving: $saveErr"
-            )
+            ActionResult.fail(s"Error saving: $saveErr").asUJson
         }
     }
   }
