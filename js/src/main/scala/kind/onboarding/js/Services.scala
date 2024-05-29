@@ -8,6 +8,7 @@ import kind.onboarding.docstore.model.SaveDocument200Response
 import org.scalajs.dom
 import upickle.default.*
 
+import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.*
 import scala.util.*
@@ -19,8 +20,11 @@ import scala.util.control.NonFatal
 case class Services(
     docStore: DocStoreApp,
     database: DocStoreHandler.InMemory,
+    products: Products,
     telemetry: Telemetry
 ) {
+
+  def listProducts(): Seq[js.Dynamic] = products.reader.products().execOrThrow().map(_.asJSON)
 
   private def databaseDump(): PathTree = database.asTree.execOrThrow()
 
@@ -94,6 +98,8 @@ object Services {
     val telemetry = Telemetry()
 
     val docStoreApi = DocStoreApp(docStore)(using telemetry)
-    Services(docStoreApi, docStore, telemetry)
+
+    val products = Products.inMemory().execOrThrow()
+    Services(docStoreApi, docStore, products, telemetry)
   }
 }

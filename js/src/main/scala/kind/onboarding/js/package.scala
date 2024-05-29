@@ -3,6 +3,7 @@ package kind.onboarding
 import ujson.Value.Value
 import upickle.default.*
 
+import scala.scalajs.js
 import scala.scalajs.js.JSON
 import util.Try
 
@@ -12,7 +13,10 @@ package object js {
     def as[A: ReadWriter]: Try[A] = Try(read[A](jason))
   }
 
+  extension [A: ReadWriter](value: A) {
+    def asJSON: js.Dynamic = write(value).asJavascriptObject
+  }
   extension (json: ujson.Value) {
-    def asJavascriptObject = JSON.parse(json.render(0))
+    def asJavascriptObject: js.Dynamic = JSON.parse(json.render(0))
   }
 }
