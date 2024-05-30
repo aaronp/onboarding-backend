@@ -8,7 +8,7 @@ import kind.onboarding.docstore.model.SaveDocument200Response
 import org.scalajs.dom
 import upickle.default.*
 import kind.onboarding.refdata.*
-
+import scala.scalajs.js.JSON
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.*
@@ -21,29 +21,8 @@ import scala.util.control.NonFatal
 case class Services(
     docStore: DocStoreApp,
     database: DocStoreHandler.InMemory,
-    products: Products,
     telemetry: Telemetry
 ) {
-
-  def saveProducts(data: js.Dynamic) = {
-    data.as[Seq[Product]] match {
-      case Success(newValue) =>
-        Try(products.set(newValue).execOrThrow()) match {
-          case Success(_)   => ActionResult("saved").asJSON
-          case Failure(err) => ActionResult.fail(s"Error saving: $err", err.getMessage).asJSON
-        }
-      case Failure(err) =>
-        ActionResult.fail(s"error parsing data: >${data.asJsonString}< : $err").asJSON
-    }
-  }
-
-  def listProducts(): Seq[js.Dynamic] =
-    products
-      .products()
-      .execOrThrow()
-      .map { case product @ Product(name, _) =>
-        product.mergeAsJSON(LabeledValue(name))
-      }
 
   private def databaseDump(): PathTree = database.asTree.execOrThrow()
 
@@ -96,14 +75,12 @@ object Services {
   }
   @JSExportTopLevel("createService")
   def createService(): Services = {
-    val docStore = readDatabase("default") match {
+    val docStore: DocStoreHandler.InMemory = readDatabase("default") match {
       case Some(db) => DocStoreHandler(db)
       case None     => DocStoreHandler()
     }
-
-    val telemetry = Telemetry()
-
-    val docStoreApi = DocStoreApp(docStore)(using telemetry)
+    val telemetry                = Telemetry()
+    val docStoreApi: DocStoreApp = DocStoreApp(docStore)(using telemetry)
 
     val products = Products.inMemory().execOrThrow()
     Services(docStoreApi, docStore, products, telemetry)

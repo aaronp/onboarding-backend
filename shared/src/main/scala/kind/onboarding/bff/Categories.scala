@@ -1,0 +1,50 @@
+package kind.onboarding.bff
+
+import kind.onboarding.docstore.DocStoreApp
+import kind.onboarding.js.{ActionResult, LabeledValue, emptyJSON}
+import kind.onboarding.refdata.{Category, CategoryAdminService, CategoryService}
+
+import scala.scalajs.js
+import scala.util.{Failure, Success, Try}
+import zio.{Task, *}
+
+object Categories {
+
+  val Id = Actor.service("category-service")
+
+  def apply(docStore: DocStoreApp) = {}
+
+  def inMemory(): Task[CategoryService & CategoryAdminService] = for {
+    reader <- CategoryService.inMemory
+    writer = CategoryAdminService(reader.db)
+  } yield Delegate(reader, writer)
+
+  class Delegate(reader: CategoryService, writer: CategoryAdminService)
+      extends CategoryService,
+        CategoryAdminService {
+    override def categories() = reader.products()
+
+    override def add(product: Category) = writer.add(product)
+
+    override def update(product: Category) = writer.update(product)
+
+    override def remove(product: String) = writer.remove(product)
+
+    override def set(products: Seq[Category]) = writer.set(products)
+  }
+
+  class Impl(docStore: DocStoreApp) extends CategoryService, CategoryAdminService {
+    override def categories(): Task[Seq[Category]] = {
+      docStore.listChildren("refdata/categories")
+
+    }
+
+    override def add(product: Category) = writer.add(product)
+
+    override def update(product: Category) = writer.update(product)
+
+    override def remove(product: String) = writer.remove(product)
+
+    override def set(products: Seq[Category]) = writer.set(products)
+  }
+}

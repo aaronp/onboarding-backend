@@ -20,7 +20,6 @@ object DocStoreHandler {
 /** The implementation of the DocStore commands
   */
 trait DocStoreHandler(ref: Ref[PathTree]) {
-  import PathTree.asPath
 
   //   def asMermaid(quantity: Int, toppings: List[String]): String = {
   //     given telemetry: Telemetry = Telemetry()
