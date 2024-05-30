@@ -39,12 +39,12 @@ object Categories {
 
     }
 
-    override def add(product: Category) = writer.add(product)
+    override def add(product: Category) = ???
 
-    override def update(product: Category) = writer.update(product)
+    override def update(product: Category) = ???
 
-    override def remove(product: String) = writer.remove(product)
+    override def remove(product: String) = ???
 
-    override def set(products: Seq[Category]) = writer.set(products)
+    override def set(products: Seq[Category]) = ???
   }
 }
