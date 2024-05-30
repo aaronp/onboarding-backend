@@ -77,6 +77,28 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
     } yield response
     task.taskAsResultTraced(DB.id, command)
   }
+
+  def onDelete(command: DocStoreLogic.DeleteDocument) = {
+    val parts = command.path.asPath
+    if (parts.isEmpty) {
+      ZIO
+        .succeed(
+          DeleteDocument200Response(Option("invalid delete request with an empty path"))
+        )
+        .taskAsResultTraced(DB.id, command)
+    } else {
+      val task = for {
+        msg <- ref.modify { latest =>
+          latest.remove(parts) match {
+            case Some(newTree) => s"removed ${command.path}" -> newTree
+            case None          => "not found"                -> latest
+          }
+        }
+      } yield DeleteDocument200Response(Option(msg))
+      task.taskAsResultTraced(DB.id, command)
+    }
+  }
+
   def onGetMetadata(command: DocStoreLogic.GetMetadata, path: String) = {
     val task = for {
       latest <- ref.get
@@ -145,8 +167,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
             .attempt(sys.error(s"invalid copy request $from to $to"))
             .taskAsResultTraced(DB.id, command)
         case command @ DocStoreLogic.DeleteDocument(request) =>
-          // TODO - implement me
-          DeleteDocument200Response().asResultTraced(DB.id, command)
+          onDelete(command)
         case command @ DocStoreLogic.GetDocument(path, versionOpt) =>
           onGetDocument(command, path, versionOpt)
         case command @ DocStoreLogic.GetMetadata(path) =>

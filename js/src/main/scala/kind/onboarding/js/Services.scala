@@ -13,6 +13,7 @@ import scala.util.*
 import scala.util.control.NonFatal
 import kind.onboarding.bff.BackendForFrontend
 import zio.*
+import kind.onboarding.auth.User
 
 /** These are the 'convenience' functions made available to the front-end via 'createNewService'
   */

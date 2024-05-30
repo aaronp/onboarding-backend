@@ -7,7 +7,11 @@ import kind.logic.telemetry.*
 import kind.onboarding.docstore.DocStoreApp
 import kind.onboarding.refdata.{Category, CategoryAdminService, CategoryService}
 import zio.*
+import kind.onboarding.refdata.Categories
+import kind.onboarding.auth.User
 
+/** Representation of a single point of entry for our front-end
+  */
 trait BackendForFrontend {
 
   // === Users / AUTH ===

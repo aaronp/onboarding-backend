@@ -1,6 +1,11 @@
 package kind.onboarding.refdata
 
-import zio.{Ref, Task}
+import zio.*
+import kind.onboarding.docstore.*
+import kind.onboarding.Systems.*
+import kind.logic.telemetry.*
+import kind.logic.*
+import upickle.default.*
 
 /** The write-end for creating categories, aimed at admins
   */
@@ -12,6 +17,40 @@ trait CategoryAdminService {
 }
 
 object CategoryAdminService {
+
+  case class Impl(docStore: DocStoreApp)(using telemetry: Telemetry) extends CategoryAdminService {
+
+    override def add(category: Category) = {
+      docStore
+        .saveDocument(s"$PathToCategories/${category.id}", write(category))
+        .asTaskTraced(CategoryAdmin.id, DB.id, category)
+        .as(())
+    }
+
+    override def update(category: Category) = {
+      docStore
+        .updateDocument(s"$PathToCategories/${category.id}", write(category))
+        .asTaskTraced(CategoryAdmin.id, DB.id, category)
+        .as(())
+    }
+
+    override def remove(category: String) = {
+      docStore
+        .deleteDocument(s"$PathToCategories/${asId(category)}")
+        .asTaskTraced(CategoryAdmin.id, DB.id, category)
+        .as(())
+    }
+
+    override def set(categories: Seq[Category]) = {
+      for {
+        _ <- docStore
+          .deleteDocument(PathToCategories)
+          .asTaskTraced(CategoryAdmin.id, DB.id, "delete")
+        _ <- ZIO.foreachPar(categories)(add)
+      } yield ()
+    }
+
+  }
 
   case class InMemory(db: Ref[Seq[Category]]) extends CategoryAdminService {
     def add(category: Category)  = db.update(list => category +: list)
@@ -31,5 +70,6 @@ object CategoryAdminService {
 
   def inMemory: Task[InMemory] = Ref.make(Seq.empty[Category]).map(apply)
 
-  def apply(db: Ref[Seq[Category]]) = InMemory(db)
+  def apply(db: Ref[Seq[Category]])                            = InMemory(db)
+  def apply(docStore: DocStoreApp)(using telemetry: Telemetry) = Impl(docStore)
 }
