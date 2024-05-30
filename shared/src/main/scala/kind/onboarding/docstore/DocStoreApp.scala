@@ -1,5 +1,6 @@
 package kind.onboarding.docstore
 
+import kind.onboarding.Systems
 import kind.logic.*
 import kind.logic.telemetry.*
 import kind.onboarding.docstore.model.*
@@ -21,8 +22,6 @@ trait DocStoreApp extends DefaultService {
 
 object DocStoreApp {
 
-  val Id = Actor.service("onboarding", "DB")
-
   def apply(
       impl: DocStoreHandler = DocStoreHandler.apply()
   )(using telemetry: Telemetry): DocStoreApp = {
@@ -41,7 +40,7 @@ object DocStoreApp {
   class App(originalLogic: [A] => DocStoreLogic[A] => Result[A])(using telemetry: Telemetry)
       extends RunnableProgram[DocStoreLogic](originalLogic)
       with DocStoreApp {
-    override protected def appCoords = Id
+    override protected def appCoords = Systems.DB.id
 
     override def query(path: String, filter: Option[String]): List[ujson.Value] = {
       run(DocStoreLogic.query(path, filter)).execOrThrow()

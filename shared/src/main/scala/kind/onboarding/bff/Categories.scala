@@ -7,9 +7,6 @@ import zio.{Task, *}
 
 object Categories {
 
-  val ReadId  = BackendForFrontend.Id.withName("categories")
-  val AdminId = BackendForFrontend.Id.withName("categories-admin")
-
   def apply(docStore: DocStoreApp): CategoryService & CategoryAdminService = {
     Impl(docStore)
   }

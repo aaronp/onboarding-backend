@@ -1,5 +1,6 @@
 package kind.onboarding.bff
 
+import kind.onboarding.Systems.*
 import kind.onboarding.docstore.model.*
 import kind.logic.*
 import kind.logic.telemetry.*
@@ -30,12 +31,6 @@ trait BackendForFrontend {
 
 object BackendForFrontend {
 
-  val Id            = Actor.service("onboarding", "bff")
-  val DB            = DocStoreApp.Id
-  val Auth          = Id.withName("auth")
-  val CategoryRead  = Categories.ReadId
-  val CategoryAdmin = Categories.AdminId
-
   def emptyJson = Map[String, String]().asUJson
 
   case class Impl(
@@ -47,16 +42,18 @@ object BackendForFrontend {
 
     override def createNewUser(user: User) = {
       val id = user.name
-      docStore.saveDocument(s"users/${id}", user.asUJson).asTaskTraced(Id, Auth, user).map {
-        case SaveDocument200Response(msg) =>
+      docStore
+        .saveDocument(s"users/${id}", user.asUJson)
+        .asTaskTraced(BFF.id, Auth.id, user)
+        .map { case SaveDocument200Response(msg) =>
           ActionResult(msg.getOrElse(s"Created user: $id")).asUJson
-      }
+        }
     }
     override def listUsers() =
-      docStore.listChildren("users").asTaskTraced(Id, Auth, ()).map(_.asUJson)
+      docStore.listChildren("users").asTaskTraced(BFF.id, Auth.id, ()).map(_.asUJson)
 
     override def getUser(id: String) = {
-      docStore.getDocument(s"users/$id", None).asTaskTraced(Id, Auth, id).map {
+      docStore.getDocument(s"users/$id", None).asTaskTraced(BFF.id, Auth.id, id).map {
         case found: ujson.Value => found
         case other              => ujson.Null
       }
@@ -70,29 +67,29 @@ object BackendForFrontend {
             LabeledValue(name)
           }.asUJson
         }
-        .traceWith(Id, CategoryRead)
+        .traceWith(BFF.id, CategoryRead.id)
 
     override def getCategory(name: String) = {
       categoryRefData
         .getCategory(name)
-        .traceWith(Id, CategoryRead, name)
+        .traceWith(BFF.id, CategoryRead.id, name)
         .map(_.fold(emptyJson)(_.asUJson))
     }
 
     override def addCategory(name: String): Task[Json] = {
       val category = Category(name)
-      categoryAdmin.add(category).traceWith(Id, CategoryAdmin, name).map { _ =>
+      categoryAdmin.add(category).traceWith(BFF.id, CategoryAdmin.id, name).map { _ =>
         ActionResult("saved").withData(category).asUJson
       }
     }
 
     override def saveCategories(categories: Seq[Category]): Task[Json] =
-      categoryAdmin.set(categories).traceWith(Id, CategoryAdmin, categories).map { _ =>
+      categoryAdmin.set(categories).traceWith(BFF.id, CategoryAdmin.id, categories).map { _ =>
         ActionResult("saved").withData(emptyJson).asUJson
       }
 
     override def updateCategory(category: Category): Task[Json] =
-      categoryAdmin.update(category).traceWith(Id, CategoryAdmin, category).map { _ =>
+      categoryAdmin.update(category).traceWith(BFF.id, CategoryAdmin.id, category).map { _ =>
         ActionResult("updated").withData(emptyJson).asUJson
       }
   }

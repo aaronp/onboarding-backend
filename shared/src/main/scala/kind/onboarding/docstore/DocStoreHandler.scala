@@ -1,6 +1,7 @@
 package kind.onboarding.docstore
 
 import kind.onboarding.docstore.model.*
+import kind.onboarding.Systems.*
 import kind.logic.telemetry.*
 import zio.*
 import kind.logic.json.*
@@ -21,11 +22,6 @@ object DocStoreHandler {
   */
 trait DocStoreHandler(ref: Ref[PathTree]) {
 
-  //   def asMermaid(quantity: Int, toppings: List[String]): String = {
-  //     given telemetry: Telemetry = Telemetry()
-  //     defaultProgram.orderPizzaAsMermaid(quantity, toppings)._2
-  //   }
-
   def onListChildren(command: DocStoreLogic.ListChildren, path: String): Result[Seq[String]] = {
     def kids(latest: PathTree, pathList: Seq[String]) = {
       latest.at(pathList).fold(List.empty[String])(_.children.keySet.toList.sorted)
@@ -38,7 +34,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       children   = if pathAsList.isEmpty then rootKids(latest) else kids(latest, pathAsList)
     } yield children
 
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onQuery(command: DocStoreLogic.Query, path: String, filterOpt: Option[String]) = {
@@ -47,7 +43,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       parts   = path.asPath
       results = latest.query(parts, filterOpt)
     } yield results
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
   def onCompare(
       command: DocStoreLogic.CompareDocuments,
@@ -65,7 +61,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       diff = leftData.diffWith(rightData)
     } yield CompareDocuments200Response(Option(diff))
 
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onCopy(command: DocStoreLogic.CopyDocument, fromPath: String, toPath: String) = {
@@ -79,7 +75,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
         .update(_.updateData(toPath.asPath, data))
       response = CopyDocument200Response()
     } yield response
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
   def onGetMetadata(command: DocStoreLogic.GetMetadata, path: String) = {
     val task = for {
@@ -88,7 +84,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       data  = value.map(_.data).getOrElse(ujson.Null)
     } yield GetMetadata200Response(latestVersion = Option(s"TODO: versions: ${data.render(2)}"))
 
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onGetDocument(
@@ -103,7 +99,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       data  = value.map(_.data).getOrElse(ujson.Null)
     } yield data
 
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onPatchDocument(command: DocStoreLogic.UpdateDocument, path: String, newValue: Json) = {
@@ -113,7 +109,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       latest <- ref.get
       response = UpdateDocument200Response(Option(s"Updated: ${latest.formatted}"))
     } yield response
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onSaveDocument(command: DocStoreLogic.SaveDocument, path: String, data: Json) = {
@@ -123,7 +119,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       latest <- ref.get
       response = SaveDocument200Response(Option(s"Updated: ${latest.formatted}"))
     } yield response
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def defaultProgram(using telemetry: Telemetry): [A] => DocStoreLogic[A] => Result[A] = [A] =>
@@ -139,7 +135,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
         case command @ DocStoreLogic.CompareDocuments(request) =>
           ZIO
             .attempt(sys.error(s"invalid diff request $request"))
-            .taskAsResultTraced(DocStoreApp.Id, command)
+            .taskAsResultTraced(DB.id, command)
         case command @ DocStoreLogic.CopyDocument(
               CopyDocumentRequest(Some(fromPath), Some(toPath))
             ) =>
@@ -147,10 +143,10 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
         case command @ DocStoreLogic.CopyDocument(CopyDocumentRequest(from, to)) =>
           ZIO
             .attempt(sys.error(s"invalid copy request $from to $to"))
-            .taskAsResultTraced(DocStoreApp.Id, command)
+            .taskAsResultTraced(DB.id, command)
         case command @ DocStoreLogic.DeleteDocument(request) =>
           // TODO - implement me
-          DeleteDocument200Response().asResultTraced(DocStoreApp.Id, command)
+          DeleteDocument200Response().asResultTraced(DB.id, command)
         case command @ DocStoreLogic.GetDocument(path, versionOpt) =>
           onGetDocument(command, path, versionOpt)
         case command @ DocStoreLogic.GetMetadata(path) =>
