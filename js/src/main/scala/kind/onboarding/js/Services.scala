@@ -7,9 +7,7 @@ import kind.onboarding.bff.*
 import org.scalajs.dom
 import upickle.default.*
 import kind.onboarding.refdata.*
-import scala.scalajs.js.JSON
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.*
 import scala.util.*
 import scala.util.control.NonFatal
@@ -23,43 +21,15 @@ case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry:
 
   def asTree = database.get
 
-  /** @param name
-    *   the category name
-    * @return
-    *   the category for the given name, or an empty json object
-    */
-  def getCategory(name: String): Task[Json] =
-    categoryRefData.getCategory(name).map(_.fold(emptyJson)(_.asUJson))
+  def getCategory(name: String) = bff.getCategory(name).runAsJSON
 
-  /** @param name
-    *   the category name
-    * @return
-    *   a new category with the given name
-    */
-  def addCategory(name: String): Json = {
-    val category = Category(name)
-    categoryAdmin.add(category).asTry() match {
-      case Success(_) => ActionResult("saved").withData(category)
-      case Failure(err) =>
-        ActionResult
-          .fail(s"Error creating new project $name: $err", err.getMessage)
-          .withData(emptyJson)
-    }
-  }
+  def addCategory(name: String) = bff.addCategory(name).runAsJSON
 
   def saveCategory(data: js.Dynamic) = data.runWithInput[Category](bff.updateCategory)
 
-  def saveCategories(data: js.Dynamic) = {
-    data.runWithInput[Seq[Category]](bff.saveCategories)
-  }
+  def saveCategories(data: js.Dynamic) = data.runWithInput[Seq[Category]](bff.saveCategories)
 
-  def listProducts(): Seq[js.Dynamic] =
-    products
-      .products()
-      .execOrThrow()
-      .map { case product @ Category(name, _) =>
-        product.mergeAsJSON(LabeledValue(name))
-      }
+  def listCategories() = bff.listCategories().runAsJSON
 
   private def databaseDump(): PathTree = asTree.execOrThrow()
 
@@ -75,16 +45,11 @@ case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry:
 
   def snapshotDatabase() = saveDatabaseAs("default")
 
-  def listUsers() = bff.listUsers().toJSArray
+  def listUsers() = bff.listUsers().runAsJSON
 
-  def getUser(name: String) = docStore.getDocument(s"users/$name", None) match {
-    case found: ujson.Value => found.asJavascriptObject
-    case other              => ujson.Null.asJavascriptObject
-  }
+  def getUser(name: String) = bff.getUser(name).runAsJSON
 
-  def createNewUser(json: String) = {
-    json.runWithInput[User](bff.createNewUser)
-  }
+  def createNewUser(json: String) = json.runWithInput[User](bff.createNewUser)
 }
 
 object Services {

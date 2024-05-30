@@ -1,16 +1,14 @@
 package kind.onboarding.bff
 
 import kind.onboarding.docstore.DocStoreApp
-import kind.logic.*
 import kind.onboarding.refdata.{Category, CategoryAdminService, CategoryService}
 
-import scala.scalajs.js
-import scala.util.{Failure, Success, Try}
 import zio.{Task, *}
 
 object Categories {
 
-  val Id = BackendForFrontend.Id.withName("categories")
+  val ReadId  = BackendForFrontend.Id.withName("categories")
+  val AdminId = BackendForFrontend.Id.withName("categories-admin")
 
   def apply(docStore: DocStoreApp): CategoryService & CategoryAdminService = {
     Impl(docStore)
@@ -37,8 +35,8 @@ object Categories {
 
   class Impl(docStore: DocStoreApp) extends CategoryService, CategoryAdminService {
     override def categories(): Task[Seq[Category]] = {
-      docStore.query("refdata/categories", None).???
-
+      docStore.query("refdata/categories", None)
+      ???
     }
 
     override def add(product: Category) = ???

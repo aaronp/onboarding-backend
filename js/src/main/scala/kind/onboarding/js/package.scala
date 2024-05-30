@@ -15,11 +15,12 @@ package object js {
   private def emptyJson = Map[String, String]().asUJson
 
   extension (task: Task[Json]) {
-    def runAsUJson = task.asTry() match {
+    def runAsUJson: Json = task.asTry() match {
       case Success(result) => ActionResult("ok").withData(result)
       case Failure(err) =>
         ActionResult.fail(s"Error: $err", err.getMessage).withData(emptyJson)
     }
+    def runAsJSON: js.Dynamic = runAsUJson.asJavascriptObject
   }
 
   extension (jason: String) {

@@ -40,6 +40,15 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
 
     task.taskAsResultTraced(DocStoreApp.Id, command)
   }
+
+  def onQuery(command: DocStoreLogic.Query, path: String, filterOpt: Option[String]) = {
+    val task = for {
+      latest <- ref.get
+      parts   = path.asPath
+      results = latest.query(parts, filterOpt)
+    } yield results
+    task.taskAsResultTraced(DocStoreApp.Id, command)
+  }
   def onCompare(
       command: DocStoreLogic.CompareDocuments,
       leftPath: String,
@@ -120,6 +129,8 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
   def defaultProgram(using telemetry: Telemetry): [A] => DocStoreLogic[A] => Result[A] = [A] =>
     (input: DocStoreLogic[A]) => {
       val result = input match {
+        case command @ DocStoreLogic.Query(path, filter) =>
+          onQuery(command, path, filter)
         case command @ DocStoreLogic.ListChildren(path) => onListChildren(command, path)
         case command @ DocStoreLogic.CompareDocuments(
               CompareDocumentsRequest(Some(leftPath), Some(rightPath))

@@ -21,7 +21,7 @@ trait DocStoreApp extends DefaultService {
 
 object DocStoreApp {
 
-  val Id = Actor.service[DocStoreApp]
+  val Id = Actor.service("onboarding", "DB")
 
   def apply(
       impl: DocStoreHandler = DocStoreHandler.apply()
@@ -43,6 +43,9 @@ object DocStoreApp {
       with DocStoreApp {
     override protected def appCoords = Id
 
+    override def query(path: String, filter: Option[String]): List[ujson.Value] = {
+      run(DocStoreLogic.query(path, filter)).execOrThrow()
+    }
     def withOverride(overrideFn: PartialFunction[DocStoreLogic[?], Result[?]]): App = {
       val newLogic: [A] => DocStoreLogic[A] => Result[A] = [A] => {
         (_: DocStoreLogic[A]) match {
