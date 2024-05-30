@@ -4,6 +4,32 @@ info:
   description: API for storing, retrieving, updating, and deleting JSON documents.
   version: 2.0.0
 paths:
+  /query/{path}:
+    get:
+      operationId: query
+      summary: Query data with optional filter
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The path parameter to identify the query target
+        - name: filter
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional filter to refine the query results
+      responses:
+        '200':
+          description: Successful response with an array of results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
   /children/{path}:
     get:
       operationId: listChildren

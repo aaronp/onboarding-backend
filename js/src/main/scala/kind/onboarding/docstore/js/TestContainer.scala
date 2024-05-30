@@ -5,7 +5,6 @@ import kind.logic.telemetry.*
 import kind.onboarding.docstore.api.DefaultService
 import kind.onboarding.docstore.model.*
 import org.scalajs.dom
-import org.scalajs.dom.html
 import scalatags.JsDom.all.*
 
 import scala.util.*

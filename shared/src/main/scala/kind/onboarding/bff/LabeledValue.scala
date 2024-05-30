@@ -1,4 +1,4 @@
-package kind.onboarding.js
+package kind.onboarding.bff
 
 import upickle.default.*
 

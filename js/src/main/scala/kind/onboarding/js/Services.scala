@@ -3,49 +3,36 @@ package kind.onboarding.js
 import kind.logic.*
 import kind.logic.json.PathTree
 import kind.logic.telemetry.*
-import kind.onboarding.docstore.*
-import kind.onboarding.docstore.model.SaveDocument200Response
+import kind.onboarding.bff.*
 import org.scalajs.dom
 import upickle.default.*
 import kind.onboarding.refdata.*
-
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.*
 import scala.util.*
 import scala.util.control.NonFatal
+import kind.onboarding.bff.BackendForFrontend
+import zio.*
+import kind.onboarding.auth.User
 
 /** These are the 'convenience' functions made available to the front-end via 'createNewService'
   */
 @JSExportAll
-case class Services(
-    docStore: DocStoreApp,
-    database: DocStoreHandler.InMemory,
-    products: Products,
-    telemetry: Telemetry
-) {
+case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry: Telemetry) {
 
-  def saveProducts(data: js.Dynamic) = {
-    data.as[Seq[Product]] match {
-      case Success(newValue) =>
-        Try(products.set(newValue).execOrThrow()) match {
-          case Success(_)   => ActionResult("saved").asJSON
-          case Failure(err) => ActionResult.fail(s"Error saving: $err", err.getMessage).asJSON
-        }
-      case Failure(err) =>
-        ActionResult.fail(s"error parsing data: >${data.asJsonString}< : $err").asJSON
-    }
-  }
+  def asTree = database.get
 
-  def listProducts(): Seq[js.Dynamic] =
-    products
-      .products()
-      .execOrThrow()
-      .map { case product @ Product(name, _) =>
-        product.mergeAsJSON(LabeledValue(name))
-      }
+  def getCategory(name: String) = bff.getCategory(name).runAsJSON
 
-  private def databaseDump(): PathTree = database.asTree.execOrThrow()
+  def addCategory(name: String) = bff.addCategory(name).runAsJSON
+
+  def saveCategory(data: js.Dynamic) = data.runWithInput[Category](bff.updateCategory)
+
+  def saveCategories(data: js.Dynamic) = data.runWithInput[Seq[Category]](bff.saveCategories)
+
+  def listCategories() = bff.listCategories().runAsJSON
+
+  private def databaseDump(): PathTree = asTree.execOrThrow()
 
   /** Saves the database at the given name
     * @param name
@@ -59,26 +46,11 @@ case class Services(
 
   def snapshotDatabase() = saveDatabaseAs("default")
 
-  def listUsers() = docStore.listChildren("users").toJSArray
+  def listUsers() = bff.listUsers().runAsJSON
 
-  def getUser(name: String) = docStore.getDocument(s"users/$name", None) match {
-    case found: ujson.Value => found.asJavascriptObject
-    case other              => ujson.Null.asJavascriptObject
-  }
+  def getUser(name: String) = bff.getUser(name).runAsJSON
 
-  def createNewUser(json: String): Json = {
-    json.as[User] match {
-      case Failure(err) => ActionResult.fail(s"Error parsing json as user: >${json}<").asUJson
-      case Success(user) =>
-        val id = user.name
-        Try(docStore.saveDocument(s"users/${id}", user.asJson)) match {
-          case Success(SaveDocument200Response(msg)) =>
-            ActionResult(msg.getOrElse(s"Created user: $id")).asUJson
-          case Failure(saveErr) =>
-            ActionResult.fail(s"Error saving: $saveErr").asUJson
-        }
-    }
-  }
+  def createNewUser(json: String) = json.runWithInput[User](bff.createNewUser)
 }
 
 object Services {
@@ -96,16 +68,19 @@ object Services {
   }
   @JSExportTopLevel("createService")
   def createService(): Services = {
-    val docStore = readDatabase("default") match {
+    // it's OK to know about our local backend stuff here
+    // as we'll swap out a 'real' backend which has a REST client
+    // behind a similar function
+    import kind.onboarding.docstore.*
+    val docStore: DocStoreHandler.InMemory = readDatabase("default") match {
       case Some(db) => DocStoreHandler(db)
       case None     => DocStoreHandler()
     }
+    val telemetryInst            = Telemetry()
+    val docStoreApi: DocStoreApp = DocStoreApp(docStore)(using telemetryInst)
 
-    val telemetry = Telemetry()
+    val bff = BackendForFrontend(docStoreApi)(using telemetryInst)
 
-    val docStoreApi = DocStoreApp(docStore)(using telemetry)
-
-    val products = Products.inMemory().execOrThrow()
-    Services(docStoreApi, docStore, products, telemetry)
+    new Services(docStore.ref, bff, telemetryInst)
   }
 }

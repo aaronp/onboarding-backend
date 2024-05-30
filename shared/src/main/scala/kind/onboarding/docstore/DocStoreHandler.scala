@@ -1,6 +1,7 @@
 package kind.onboarding.docstore
 
 import kind.onboarding.docstore.model.*
+import kind.onboarding.Systems.*
 import kind.logic.telemetry.*
 import zio.*
 import kind.logic.json.*
@@ -20,12 +21,6 @@ object DocStoreHandler {
 /** The implementation of the DocStore commands
   */
 trait DocStoreHandler(ref: Ref[PathTree]) {
-  import PathTree.asPath
-
-  //   def asMermaid(quantity: Int, toppings: List[String]): String = {
-  //     given telemetry: Telemetry = Telemetry()
-  //     defaultProgram.orderPizzaAsMermaid(quantity, toppings)._2
-  //   }
 
   def onListChildren(command: DocStoreLogic.ListChildren, path: String): Result[Seq[String]] = {
     def kids(latest: PathTree, pathList: Seq[String]) = {
@@ -39,7 +34,16 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       children   = if pathAsList.isEmpty then rootKids(latest) else kids(latest, pathAsList)
     } yield children
 
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
+  }
+
+  def onQuery(command: DocStoreLogic.Query, path: String, filterOpt: Option[String]) = {
+    val task = for {
+      latest <- ref.get
+      parts   = path.asPath
+      results = latest.query(parts, filterOpt)
+    } yield results
+    task.taskAsResultTraced(DB.id, command)
   }
   def onCompare(
       command: DocStoreLogic.CompareDocuments,
@@ -57,7 +61,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       diff = leftData.diffWith(rightData)
     } yield CompareDocuments200Response(Option(diff))
 
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onCopy(command: DocStoreLogic.CopyDocument, fromPath: String, toPath: String) = {
@@ -71,8 +75,30 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
         .update(_.updateData(toPath.asPath, data))
       response = CopyDocument200Response()
     } yield response
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
+
+  def onDelete(command: DocStoreLogic.DeleteDocument) = {
+    val parts = command.path.asPath
+    if (parts.isEmpty) {
+      ZIO
+        .succeed(
+          DeleteDocument200Response(Option("invalid delete request with an empty path"))
+        )
+        .taskAsResultTraced(DB.id, command)
+    } else {
+      val task = for {
+        msg <- ref.modify { latest =>
+          latest.remove(parts) match {
+            case Some(newTree) => s"removed ${command.path}" -> newTree
+            case None          => "not found"                -> latest
+          }
+        }
+      } yield DeleteDocument200Response(Option(msg))
+      task.taskAsResultTraced(DB.id, command)
+    }
+  }
+
   def onGetMetadata(command: DocStoreLogic.GetMetadata, path: String) = {
     val task = for {
       latest <- ref.get
@@ -80,7 +106,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       data  = value.map(_.data).getOrElse(ujson.Null)
     } yield GetMetadata200Response(latestVersion = Option(s"TODO: versions: ${data.render(2)}"))
 
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onGetDocument(
@@ -95,7 +121,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       data  = value.map(_.data).getOrElse(ujson.Null)
     } yield data
 
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onPatchDocument(command: DocStoreLogic.UpdateDocument, path: String, newValue: Json) = {
@@ -105,7 +131,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       latest <- ref.get
       response = UpdateDocument200Response(Option(s"Updated: ${latest.formatted}"))
     } yield response
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def onSaveDocument(command: DocStoreLogic.SaveDocument, path: String, data: Json) = {
@@ -115,12 +141,14 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       latest <- ref.get
       response = SaveDocument200Response(Option(s"Updated: ${latest.formatted}"))
     } yield response
-    task.taskAsResultTraced(DocStoreApp.Id, command)
+    task.taskAsResultTraced(DB.id, command)
   }
 
   def defaultProgram(using telemetry: Telemetry): [A] => DocStoreLogic[A] => Result[A] = [A] =>
     (input: DocStoreLogic[A]) => {
       val result = input match {
+        case command @ DocStoreLogic.Query(path, filter) =>
+          onQuery(command, path, filter)
         case command @ DocStoreLogic.ListChildren(path) => onListChildren(command, path)
         case command @ DocStoreLogic.CompareDocuments(
               CompareDocumentsRequest(Some(leftPath), Some(rightPath))
@@ -129,7 +157,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
         case command @ DocStoreLogic.CompareDocuments(request) =>
           ZIO
             .attempt(sys.error(s"invalid diff request $request"))
-            .taskAsResultTraced(DocStoreApp.Id, command)
+            .taskAsResultTraced(DB.id, command)
         case command @ DocStoreLogic.CopyDocument(
               CopyDocumentRequest(Some(fromPath), Some(toPath))
             ) =>
@@ -137,10 +165,9 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
         case command @ DocStoreLogic.CopyDocument(CopyDocumentRequest(from, to)) =>
           ZIO
             .attempt(sys.error(s"invalid copy request $from to $to"))
-            .taskAsResultTraced(DocStoreApp.Id, command)
+            .taskAsResultTraced(DB.id, command)
         case command @ DocStoreLogic.DeleteDocument(request) =>
-          // TODO - implement me
-          DeleteDocument200Response().asResultTraced(DocStoreApp.Id, command)
+          onDelete(command)
         case command @ DocStoreLogic.GetDocument(path, versionOpt) =>
           onGetDocument(command, path, versionOpt)
         case command @ DocStoreLogic.GetMetadata(path) =>

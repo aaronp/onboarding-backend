@@ -8,7 +8,7 @@ ThisBuild / scalaVersion := "3.4.1"
 ThisBuild / scalafmtOnCompile := true
 ThisBuild / versionScheme := Some("early-semver")
 
-val LogicFirstVersion = "0.4.3"
+val LogicFirstVersion = "0.5.3"
 val githubResolver = "GitHub Package Registry" at "https://maven.pkg.github.com/kindservices/logic-first"
 ThisBuild / resolvers += githubResolver
 
@@ -31,7 +31,7 @@ lazy val commonSettings = Seq(
   //
   // libraryDependencies += "onboarding" %%% "kind" % "0.0.1",
   // ================================================================================================
-  libraryDependencies += "kind" %%% "kind-docstore" % "0.1.1",
+  libraryDependencies += "kind" %%% "kind-docstore" % "0.2.0",
   libraryDependencies ++= Seq(
     "org.scalatest" %%% "scalatest" % "3.2.18" % Test
   )
