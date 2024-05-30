@@ -1,86 +1,76 @@
 package kind.onboarding.bff
 
+import kind.onboarding.docstore.model.*
 import kind.logic.*
+import kind.logic.telemetry.*
 import kind.onboarding.docstore.DocStoreApp
 import kind.onboarding.refdata.{Category, CategoryAdminService, CategoryService}
-import zio.ZIO
+import zio.*
+import scala.util.*
 
-trait BackendForFrontend {}
+trait BackendForFrontend {
+
+  // === Users / AUTH ===
+  def createNewUser(user: User): Task[Json]
+
+  def getUser(id: String): Task[Json]
+
+  def listUsers(): Task[Json]
+
+  // === Category ref data ===
+  def getCategory(name: String): Task[Json]
+
+  def saveCategories(categories: Seq[Category]): Task[Json]
+
+  def updateCategory(category: Category): Task[Json]
+}
 
 object BackendForFrontend {
+
+  val Id   = Actor.service("onboarding", "bff")
+  val DB   = Id.withName("database")
+  val Auth = Id.withName("auth")
+
+  def emptyJson = Map[String, String]().asUJson
 
   case class Impl(
       categoryRefData: CategoryService,
       categoryAdmin: CategoryAdminService,
-      docStore: DocStoreApp,
-      telemetry: Telemetry
-  ) extends BackendForFrontend {
+      docStore: DocStoreApp
+  )(using telemetry: Telemetry)
+      extends BackendForFrontend {
 
-    /** @param name
-      *   the category name
-      * @return
-      *   the category for the given name, or an empty json object
-      */
-    def getCategory(name: String): Task[Json] =
+    override def createNewUser(user: User) = {
+      val id = user.name
+      docStore.saveDocument(s"users/${id}", user.asUJson).asTaskTraced(Id, Auth, user).map {
+        case SaveDocument200Response(msg) =>
+          ActionResult(msg.getOrElse(s"Created user: $id")).asUJson
+      }
+    }
+    override def listUsers() =
+      docStore.listChildren("users").asTaskTraced(Id, Auth, ()).map(_.asUJson)
+    override def getUser(id: String) = {
+      docStore.getDocument(s"users/$id", None).asTaskTraced(Id, Auth, id).map {
+        case found: ujson.Value => found
+        case other              => ujson.Null
+      }
+    }
+
+    override def saveCategories(categories: Seq[Category]): Task[Json] =
+      categoryAdmin.set(categories).map { _ => ActionResult("saved").withData(emptyJson).asUJson }
+
+    override def updateCategory(category: Category): Task[Json] =
+      categoryAdmin.update(category).map { _ =>
+        ActionResult("updated").withData(emptyJson).asUJson
+      }
+
+    override def getCategory(name: String) = {
       categoryRefData.getCategory(name).map(_.fold(emptyJson)(_.asUJson))
-
-    /** @param name
-      *   the category name
-      * @return
-      *   a new category with the given name
-      */
-    def addCategory(name: String): Json = {
-      val category = Category(name)
-      categoryAdmin.add(category).asTry() match {
-        case Success(_) => ActionResult("saved").withData(category)
-        case Failure(err) =>
-          ActionResult
-            .fail(s"Error creating new project $name: $err", err.getMessage)
-            .withData(emptyJson)
-      }
     }
-
-    def saveProduct(data: js.Dynamic) = {
-      data.as[Category] match {
-        case Success(newValue) =>
-          products.update(newValue).asTry() match {
-            case Success(_) =>
-              newValue.withKey("product").mergeAsJSON(ActionResult("saved").withKey("result"))
-            case Failure(err) =>
-              ActionResult.fail(s"Error saving: $err", err.getMessage).withKey("result").asJSON
-          }
-        case Failure(err) =>
-          ActionResult
-            .fail(s"error parsing data: >${data.asJsonString}< : $err")
-            .withKey("result")
-            .asJSON
-      }
-    }
-
-    def saveProducts(data: js.Dynamic) = {
-      data.as[Seq[Category]] match {
-        case Success(newValue) =>
-          Try(products.set(newValue).execOrThrow()) match {
-            case Success(_)   => ActionResult("saved").asJSON
-            case Failure(err) => ActionResult.fail(s"Error saving: $err", err.getMessage).asJSON
-          }
-        case Failure(err) =>
-          ActionResult.fail(s"error parsing data: >${data.asJsonString}< : $err").asJSON
-      }
-    }
-
-    def listProducts(): Seq[js.Dynamic] =
-      products
-        .products()
-        .execOrThrow()
-        .map { case product @ Category(name, _) =>
-          product.mergeAsJSON(LabeledValue(name))
-        }
-
   }
 
-  def apply(docStore: DocStoreApp, telemetry: Telemetry): BackendForFrontend = {
-    val category = Categories(docStore, telemetry)
-    new Impl(category, category, docStore, telemetry)
+  def apply(docStore: DocStoreApp)(using telemetry: Telemetry): BackendForFrontend = {
+    val category = Categories(docStore)
+    new Impl(category, category, docStore)
   }
 }

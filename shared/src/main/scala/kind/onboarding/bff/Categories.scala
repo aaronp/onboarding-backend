@@ -1,7 +1,7 @@
 package kind.onboarding.bff
 
 import kind.onboarding.docstore.DocStoreApp
-import kind.onboarding.js.{ActionResult, LabeledValue, emptyJSON}
+import kind.logic.*
 import kind.onboarding.refdata.{Category, CategoryAdminService, CategoryService}
 
 import scala.scalajs.js
@@ -10,9 +10,11 @@ import zio.{Task, *}
 
 object Categories {
 
-  val Id = Actor.service("category-service")
+  val Id = BackendForFrontend.Id.withName("categories")
 
-  def apply(docStore: DocStoreApp) = {}
+  def apply(docStore: DocStoreApp): CategoryService & CategoryAdminService = {
+    Impl(docStore)
+  }
 
   def inMemory(): Task[CategoryService & CategoryAdminService] = for {
     reader <- CategoryService.inMemory
@@ -22,7 +24,7 @@ object Categories {
   class Delegate(reader: CategoryService, writer: CategoryAdminService)
       extends CategoryService,
         CategoryAdminService {
-    override def categories() = reader.products()
+    override def categories() = reader.categories()
 
     override def add(product: Category) = writer.add(product)
 
@@ -35,7 +37,7 @@ object Categories {
 
   class Impl(docStore: DocStoreApp) extends CategoryService, CategoryAdminService {
     override def categories(): Task[Seq[Category]] = {
-      docStore.listChildren("refdata/categories")
+      docStore.query("refdata/categories", None).???
 
     }
 

@@ -23,23 +23,13 @@ paths:
           description: Optional filter to refine the query results
       responses:
         '200':
-          description: Successful response with an array of JSON objects
+          description: Successful response with an array of results
           content:
             application/json:
               schema:
                 type: array
                 items:
                   type: object
-                  properties:
-                    id:
-                      type: string
-                      example: "123"
-                    name:
-                      type: string
-                      example: "Sample Name"
-                    value:
-                      type: number
-                      example: 42
   /children/{path}:
     get:
       operationId: listChildren
