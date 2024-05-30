@@ -19,7 +19,7 @@ object CategoryService {
 
     override def categories(): Task[Seq[Category]] = {
       docStore.query(PathToCategories, None).asTaskTraced(CategoryAdmin.id, DB.id, ()).map {
-        found => found.map(asCategory).toSeq
+        found => found.flatMap(asCategory).toSeq
       }
     }
   }

@@ -22,14 +22,15 @@ object CategoryAdminService {
 
     override def add(category: Category) = {
       docStore
-        .saveDocument(s"$PathToCategories/${category.id}", write(category))
+        .saveDocument(s"$PathToCategories/${category.id}", category.asUJson)
         .asTaskTraced(CategoryAdmin.id, DB.id, category)
         .as(())
     }
 
     override def update(category: Category) = {
+      println(s"Updating category: $category")
       docStore
-        .updateDocument(s"$PathToCategories/${category.id}", write(category))
+        .saveDocument(s"$PathToCategories/${category.id}", category.asUJson)
         .asTaskTraced(CategoryAdmin.id, DB.id, category)
         .as(())
     }

@@ -1,0 +1,21 @@
+# Stage 1: Build the application
+FROM hseeberger/scala-sbt:8u222_1.3.3_2.13.1 as builder
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the build.sbt and project files
+COPY build.sbt .
+COPY project ./project
+
+# Copy the source code
+COPY src ./src
+
+# Run sbt assembly to build the fat JAR
+RUN sbt assembly
+
+# The main image
+FROM openjdk:23-slim
+WORKDIR /app
+COPY --from=builder /app/target/scala-3.4.1/*assembly*.jar app.jar
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

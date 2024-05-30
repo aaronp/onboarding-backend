@@ -22,9 +22,7 @@ trait DocStoreApp extends DefaultService {
 
 object DocStoreApp {
 
-  def apply(
-      impl: DocStoreHandler = DocStoreHandler.apply()
-  )(using telemetry: Telemetry): DocStoreApp = {
+  def apply(impl: DocStoreHandler)(using telemetry: Telemetry): DocStoreApp = {
     val logic: [A] => DocStoreLogic[A] => Result[A] = impl.defaultProgram
     App(logic)
   }

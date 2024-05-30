@@ -1,8 +1,8 @@
 import org.scalajs.linker.interface.ModuleKind
 import org.scalajs.linker.interface.OutputPatterns
 
-ThisBuild / organization := "onboarding"
-ThisBuild / name := "kind"
+ThisBuild / organization := "kind"
+ThisBuild / name := "onboarding-backend"
 ThisBuild / version := "0.0.1"
 ThisBuild / scalaVersion := "3.4.1"
 ThisBuild / scalafmtOnCompile := true

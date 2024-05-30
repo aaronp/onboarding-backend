@@ -14,6 +14,7 @@ import scala.util.control.NonFatal
 import kind.onboarding.bff.BackendForFrontend
 import zio.*
 import kind.onboarding.auth.User
+import scala.scalajs.js.JSConverters.*
 
 /** These are the 'convenience' functions made available to the front-end via 'createNewService'
   */
@@ -22,15 +23,19 @@ case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry:
 
   def asTree = database.get
 
-  def getCategory(name: String) = bff.getCategory(name).runAsJSON
+  /** @return
+    *   the scripts for the operations category page
+    */
+  def newCategoryPage() = CategoryPage(this)
 
-  def addCategory(name: String) = bff.addCategory(name).runAsJSON
+  def newDocstorePage() = DocstorePage(this)
 
-  def saveCategory(data: js.Dynamic) = data.runWithInput[Category](bff.updateCategory)
+  def saveCategories(data: js.Dynamic) =
+    data.runWithJsonAs[Seq[Category], ActionResult](bff.saveCategories)
 
-  def saveCategories(data: js.Dynamic) = data.runWithInput[Seq[Category]](bff.saveCategories)
-
-  def listCategories() = bff.listCategories().runAsJSON
+  def listCategories() = bff.listCategories().getAsJS { c =>
+    c.map(_.asJSON).toJSArray
+  }
 
   private def databaseDump(): PathTree = asTree.execOrThrow()
 
@@ -46,11 +51,15 @@ case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry:
 
   def snapshotDatabase() = saveDatabaseAs("default")
 
-  def listUsers() = bff.listUsers().runAsJSON
+  def listUsers() = bff.listUsers().getAsJS(_.toJSArray)
 
-  def getUser(name: String) = bff.getUser(name).runAsJSON
+  def getUser(name: String) = bff.getUser(name).getAsJS {
+    case Some(found) => found.asJSON
+    case None        => ActionResult.fail("User not found").asJSON
+  }
 
-  def createNewUser(json: String) = json.runWithInput[User](bff.createNewUser)
+  def createNewUser(json: String): ActionResult =
+    json.runWithJsonAs[User, ActionResult](bff.createNewUser)
 }
 
 object Services {

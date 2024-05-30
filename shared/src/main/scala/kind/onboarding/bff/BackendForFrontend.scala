@@ -9,28 +9,29 @@ import kind.onboarding.refdata.{Category, CategoryAdminService, CategoryService}
 import zio.*
 import kind.onboarding.refdata.Categories
 import kind.onboarding.auth.User
+import upickle.default.*
 
 /** Representation of a single point of entry for our front-end
   */
 trait BackendForFrontend {
 
   // === Users / AUTH ===
-  def createNewUser(user: User): Task[Json]
+  def createNewUser(user: User): Task[ActionResult]
 
-  def getUser(id: String): Task[Json]
+  def getUser(id: String): Task[Option[User]]
 
-  def listUsers(): Task[Json]
+  def listUsers(): Task[Seq[String]]
 
   // === Category ref data ===
-  def listCategories(): Task[Json]
+  def listCategories(): Task[Seq[Category]]
 
-  def getCategory(name: String): Task[Json]
+  def getCategory(name: String): Task[Option[Category]]
 
-  def addCategory(name: String): Task[Json]
+  def addCategory(name: String): Task[Category]
 
-  def saveCategories(categories: Seq[Category]): Task[Json]
+  def saveCategories(categories: Seq[Category]): Task[ActionResult]
 
-  def updateCategory(category: Category): Task[Json]
+  def updateCategory(category: Category): Task[Category]
 }
 
 object BackendForFrontend {
@@ -48,53 +49,63 @@ object BackendForFrontend {
       val id = user.name
       docStore
         .saveDocument(s"users/${id}", user.asUJson)
-        .asTaskTraced(BFF.id, Auth.id, user)
+        .asTaskTraced(BFF.id, Auth.id, user.merge("createNewUser".withKey("action")))
         .map { case SaveDocument200Response(msg) =>
-          ActionResult(msg.getOrElse(s"Created user: $id")).asUJson
+          ActionResult(msg.getOrElse(s"Created user: $id"))
         }
     }
     override def listUsers() =
-      docStore.listChildren("users").asTaskTraced(BFF.id, Auth.id, ()).map(_.asUJson)
+      docStore
+        .listChildren("users")
+        .asTaskTraced(BFF.id, Auth.id, "listUsers".withKey("action").asUJson)
+        .map { retVal =>
+          println("listUsers returning " + retVal)
+          retVal
+        }
 
     override def getUser(id: String) = {
-      docStore.getDocument(s"users/$id", None).asTaskTraced(BFF.id, Auth.id, id).map {
-        case found: ujson.Value => found
-        case other              => ujson.Null
-      }
+      docStore
+        .getDocument(s"users/$id", None)
+        .asTaskTraced(BFF.id, Auth.id, id.merge("getUser".withKey("action")))
+        .map {
+          case found: ujson.Value => Option(read[User](found))
+          case other              => None
+        }
     }
 
-    override def listCategories(): Task[Json] =
+    override def listCategories() =
       categoryRefData
         .categories()
-        .map { list =>
-          list.map { case Category(name, _) =>
-            LabeledValue(name)
-          }.asUJson
-        }
-        .traceWith(BFF.id, CategoryRead.id)
+        .traceWith(BFF.id, CategoryRead.id, "listCategories".withKey("action").asUJson)
 
     override def getCategory(name: String) = {
       categoryRefData
         .getCategory(name)
-        .traceWith(BFF.id, CategoryRead.id, name)
-        .map(_.fold(emptyJson)(_.asUJson))
+        .traceWith(
+          BFF.id,
+          CategoryRead.id,
+          name.withKey("name").merge("getCategory".withKey("action"))
+        )
     }
 
-    override def addCategory(name: String): Task[Json] = {
+    override def addCategory(name: String) = {
       val category = Category(name)
-      categoryAdmin.add(category).traceWith(BFF.id, CategoryAdmin.id, name).map { _ =>
-        ActionResult("saved").withData(category).asUJson
+      val action   = name.withKey("name").merge("addCategory".withKey("action"))
+      categoryAdmin.add(category).traceWith(BFF.id, CategoryAdmin.id, action).map { _ =>
+        category
       }
     }
 
-    override def saveCategories(categories: Seq[Category]): Task[Json] =
-      categoryAdmin.set(categories).traceWith(BFF.id, CategoryAdmin.id, categories).map { _ =>
-        ActionResult("saved").withData(emptyJson).asUJson
+    override def saveCategories(categories: Seq[Category]) =
+      val action = categories.withKey("categories").merge("saveCategories".withKey("action"))
+      categoryAdmin.set(categories).traceWith(BFF.id, CategoryAdmin.id, action).map { _ =>
+        ActionResult("saved")
       }
 
-    override def updateCategory(category: Category): Task[Json] =
-      categoryAdmin.update(category).traceWith(BFF.id, CategoryAdmin.id, category).map { _ =>
-        ActionResult("updated").withData(emptyJson).asUJson
+    override def updateCategory(category: Category) =
+      val action = category.withKey("category").merge("updateCategory".withKey("action"))
+      categoryAdmin.update(category).traceWith(BFF.id, CategoryAdmin.id, action).map { _ =>
+        category
       }
   }
 
