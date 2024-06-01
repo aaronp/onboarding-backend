@@ -49,7 +49,7 @@ object BackendForFrontend {
       val id = user.name
       docStore
         .saveDocument(s"users/${id}", user.asUJson)
-        .asTaskTraced(BFF.id, Auth.id, user.merge("createNewUser".withKey("action")))
+        .asTaskTraced(BFF.id, DB.id, user.merge("createNewUser".withKey("action")))
         .map { case SaveDocument200Response(msg) =>
           ActionResult(msg.getOrElse(s"Created user: $id"))
         }
@@ -57,16 +57,12 @@ object BackendForFrontend {
     override def listUsers() =
       docStore
         .listChildren("users")
-        .asTaskTraced(BFF.id, Auth.id, "listUsers".withKey("action").asUJson)
-        .map { retVal =>
-          println("listUsers returning " + retVal)
-          retVal
-        }
+        .asTaskTraced(BFF.id, DB.id, "listUsers".withKey("action").asUJson)
 
     override def getUser(id: String) = {
       docStore
         .getDocument(s"users/$id", None)
-        .asTaskTraced(BFF.id, Auth.id, id.merge("getUser".withKey("action")))
+        .asTaskTraced(BFF.id, DB.id, id.merge("getUser".withKey("action")))
         .map {
           case found: ujson.Value => Option(read[User](found))
           case other              => None

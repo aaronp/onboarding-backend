@@ -18,9 +18,12 @@ object CategoryService {
   case class Impl(docStore: DocStoreApp)(using telemetry: Telemetry) extends CategoryService {
 
     override def categories(): Task[Seq[Category]] = {
-      docStore.query(PathToCategories, None).asTaskTraced(CategoryAdmin.id, DB.id, ()).map {
-        found => found.flatMap(asCategory).toSeq
-      }
+      docStore
+        .query(PathToCategories, None)
+        .asTaskTraced(CategoryAdmin.id, DB.id, "categories".withKey("action").asUJson)
+        .map { found =>
+          found.flatMap(asCategory).toSeq
+        }
     }
   }
 
