@@ -23,22 +23,33 @@ object CategoryAdminService {
     override def add(category: Category) = {
       docStore
         .saveDocument(s"$PathToCategories/${category.id}", category.asUJson)
-        .asTaskTraced(CategoryAdmin.id, DB.id, category)
+        .asTaskTraced(
+          CategoryAdmin.id,
+          DB.id,
+          category.withKey("category").merge("add".withKey("action"))
+        )
         .as(())
     }
 
     override def update(category: Category) = {
-      println(s"Updating category: $category")
       docStore
         .saveDocument(s"$PathToCategories/${category.id}", category.asUJson)
-        .asTaskTraced(CategoryAdmin.id, DB.id, category)
+        .asTaskTraced(
+          CategoryAdmin.id,
+          DB.id,
+          category.withKey("category").merge("update".withKey("action"))
+        )
         .as(())
     }
 
     override def remove(category: String) = {
       docStore
         .deleteDocument(s"$PathToCategories/${asId(category)}")
-        .asTaskTraced(CategoryAdmin.id, DB.id, category)
+        .asTaskTraced(
+          CategoryAdmin.id,
+          DB.id,
+          category.withKey("category").merge("remove".withKey("action"))
+        )
         .as(())
     }
 
@@ -46,7 +57,11 @@ object CategoryAdminService {
       for {
         _ <- docStore
           .deleteDocument(PathToCategories)
-          .asTaskTraced(CategoryAdmin.id, DB.id, "delete")
+          .asTaskTraced(
+            CategoryAdmin.id,
+            DB.id,
+            categories.withKey("category").merge("delete".withKey("action"))
+          )
         _ <- ZIO.foreachPar(categories)(add)
       } yield ()
     }

@@ -6,9 +6,7 @@ import scala.scalajs.js.annotation.JSExportAll
 @JSExportAll
 case class DocstorePage(services: Services) {
   def jason() = {
-    val result = services.asTree.map(_.collapse).runAsUJson
-    println(result.render(2))
-    result.asJSON
+    services.asTree.map(_.collapse).runAsUJson.asJSON
   }
   def full() = {
     val result = services.asTree.map(_.asUJson).execOrThrow()

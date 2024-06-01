@@ -30,6 +30,8 @@ case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry:
 
   def newDocstorePage() = DocstorePage(this)
 
+  def newFlowPage() = FlowPage(this)
+
   def newOnboardingPage() = OnboardingPage(this)
 
   def saveCategories(data: js.Dynamic) =
