@@ -32,6 +32,8 @@ case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry:
 
   def newFlowPage() = FlowPage(this)
 
+  def newOnboardingPage() = OnboardingPage(this)
+
   def saveCategories(data: js.Dynamic) =
     data.runWithJsonAs[Seq[Category], ActionResult](bff.saveCategories)
 
