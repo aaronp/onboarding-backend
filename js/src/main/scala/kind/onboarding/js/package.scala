@@ -9,6 +9,7 @@ import scala.scalajs.js
 import scala.scalajs.js.JSON
 import util.*
 import zio.*
+import scala.scalajs.js.annotation.JSExportAll
 
 package object js {
 

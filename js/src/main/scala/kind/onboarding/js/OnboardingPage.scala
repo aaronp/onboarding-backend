@@ -1,16 +1,32 @@
 package kind.onboarding.js
 
+import kind.onboarding.refdata._
+import kind.onboarding.bff._
 import kind.logic.*
+
 import scala.scalajs.js.annotation.JSExportAll
 import scala.scalajs.js.JSConverters._
 
 @JSExportAll
 case class OnboardingPage(services: Services) {
 
-  def subCategoryOptions(name: JS) = {
-    services.bff.getCategory(s"$name").execOrThrow() match {
-      case Some(found) => found.subCategories.toSeq.sorted.toJSArray
-      case None        => Seq.empty[String].toJSArray
+  def categoryOptions() = {
+    services.bff
+      .listCategories()
+      .execOrThrow()
+      .map { case Category(name, _) =>
+        LabeledValue(name, name).asJSON
+      }
+      .toJSArray
+  }
+
+  def subCategoryOptions(category: JS) = {
+    services.bff.getCategory(category.toString).execOrThrow() match {
+      case Some(Category(_, subCategories)) =>
+        subCategories.map { name =>
+          LabeledValue(name).asJSON
+        }.toJSArray
+      case None => List(LabeledValue(s"No subcategories found for ${category}").asJSON).toJSArray
     }
   }
 }
