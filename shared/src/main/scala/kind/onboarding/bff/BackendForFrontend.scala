@@ -10,6 +10,7 @@ import zio.*
 import kind.onboarding.refdata.Categories
 import kind.onboarding.auth.User
 import upickle.default.*
+import kind.onboarding.svc.OnboardingService
 
 /** Representation of a single point of entry for our front-end
   */
@@ -38,9 +39,16 @@ object BackendForFrontend {
 
   def emptyJson = Map[String, String]().asUJson
 
-  case class Impl(
+  def apply(docStore: DocStoreApp)(using telemetry: Telemetry): BackendForFrontend = {
+    val category = Categories(docStore)
+    val svc      = OnboardingService(docStore)
+    new Impl(category, category, svc, docStore)
+  }
+
+  class Impl(
       categoryRefData: CategoryService,
       categoryAdmin: CategoryAdminService,
+      svc: OnboardingService,
       docStore: DocStoreApp
   )(using telemetry: Telemetry)
       extends BackendForFrontend {
@@ -103,10 +111,5 @@ object BackendForFrontend {
       categoryAdmin.update(category).traceWith(BFF.id, CategoryAdmin.id, action).map { _ =>
         category
       }
-  }
-
-  def apply(docStore: DocStoreApp)(using telemetry: Telemetry): BackendForFrontend = {
-    val category = Categories(docStore)
-    new Impl(category, category, docStore)
   }
 }

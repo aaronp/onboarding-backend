@@ -31,9 +31,9 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       val underTest = new UnderTest
       import underTest.*
 
-      val id = underTest.saveDraft(DraftDoc("foo", "transport", "submarines").asUJson)
+      val id = underTest.saveDraft(DraftDoc("foo", "transport", "submarines", "dave").asUJson)
       underTest.saveDraft(
-        DraftDoc("foo", "transport", "submarines").merge("more".withKey("data"))
+        DraftDoc("foo", "transport", "submarines", "dave").merge("more".withKey("data"))
       ) shouldBe id
 
       val Some(doc) = service.approve(id, true).execOrThrow()
@@ -42,7 +42,8 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
         "subCategory": "submarines",
         "data": "more",
         "name": "foo",
-        "category": "transport"
+        "category": "transport",
+        "ownerUserId": "dave"
       }""".parseAsJson
 
     }
@@ -51,22 +52,36 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       val underTest = new UnderTest
       import underTest.*
 
-      val id = underTest.saveDraft(DraftDoc("foo", "transport", "submarines").asUJson)
+      val id = underTest.saveDraft(DraftDoc("foo", "transport", "submarines", "dave").asUJson)
       underTest.saveDraft(
-        DraftDoc("foo", "transport", "submarines").merge("more".withKey("data"))
+        DraftDoc("foo", "transport", "submarines", "dave").merge("more".withKey("data"))
       ) shouldBe id
 
       val Some(doc) = service.approve(id, false).execOrThrow()
 
       service.listApprovedDocs().execOrThrow().size shouldBe 0
       val Some(doc2) = service.approve(id, true).execOrThrow()
-
-      println("-" * 80)
-      println(database.formatted)
-      println("-" * 80)
+      doc2 shouldBe """{
+          "approved": true,
+          "subCategory": "submarines",
+          "data": "more",
+          "ownerUserId": "dave",
+          "name": "foo",
+          "category": "transport"
+        }""".parseAsJson
 
       val Seq(approvedDoc) = service.listApprovedDocs().execOrThrow()
-      println(approvedDoc)
+      approvedDoc shouldBe """{
+          "data": {
+            "approved": true,
+            "subCategory": "submarines",
+            "data": "more",
+            "ownerUserId": "dave",
+            "name": "foo",
+            "category": "transport"
+          },
+          "_id": "foo"
+        }""".parseAsJson
     }
   }
   "OnboardingService.listDrafts" should {
@@ -76,17 +91,18 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       import underTest.*
 
       service.listDrafts().execOrThrow().size shouldBe 0
-      val id1 = underTest.saveDraft(DraftDoc("hello", "transport", "submarines").asUJson)
+      val id1 = underTest.saveDraft(DraftDoc("hello", "transport", "submarines", "dave").asUJson)
       service.listDrafts().execOrThrow().size shouldBe 1
-      val id2        = underTest.saveDraft(DraftDoc("there", "transport", "submarines").asUJson)
-      val updatedDoc = underTest.saveDraft(DraftDoc("there", "changed", "toThis").asUJson)
+      val id2 = underTest.saveDraft(DraftDoc("there", "transport", "submarines", "dave").asUJson)
+      val updatedDoc = underTest.saveDraft(DraftDoc("there", "changed", "toThis", "dave").asUJson)
 
       val Seq(a, b) = service.listDrafts().execOrThrow()
       a shouldBe """{
           "data": {
             "name": "hello",
             "category": "transport",
-            "subCategory": "submarines"
+            "subCategory": "submarines",
+            "ownerUserId": "dave"
           },
           "_id": "hello"
         }""".parseAsJson
@@ -95,7 +111,8 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
         "data": {
           "subCategory": "toThis",
           "name": "there",
-          "category": "changed"
+          "category": "changed",
+            "ownerUserId": "dave"
         },
         "_id": "there"
       }""".parseAsJson
@@ -118,7 +135,7 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       import underTest.*
 
       // save an initial draft
-      val doc = DraftDoc("hello", "transport", "submarines")
+      val doc = DraftDoc("hello", "transport", "submarines", "dave")
       val id  = underTest.saveDraft(doc.merge("extra".withKey("info")))
 
       // now update it
@@ -135,7 +152,8 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
             "name": "hello",
             "information": "more",
             "category": "transport",
-            "info": "extra"
+            "info": "extra",
+            "ownerUserId": "dave"
           },
           "_id": "hello"
         }""".parseAsJson
@@ -146,7 +164,7 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       import underTest.*
 
       underTest.service
-        .saveDoc(DraftDoc("hello", "transport", "submarines").approve(true).asUJson)
+        .saveDoc(DraftDoc("hello", "transport", "submarines", "dave").approve(true).asUJson)
         .execOrThrow() match {
         case result: ActionResult =>
           result.success shouldBe false

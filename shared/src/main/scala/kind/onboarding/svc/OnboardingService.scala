@@ -14,15 +14,28 @@ import upickle.default.*
 
 trait OnboardingService {
   def saveDoc(data: Json): Task[DocId | ActionResult]
-  def getDoc(id: DocId): Task[Option[Json]]
+  def getDraft(id: DocId): Task[Option[Json]]
+  def getApprovedDoc(id: DocId): Task[Option[Json]]
   def listDrafts(): Task[Seq[Json]]
   def listApprovedDocs(): Task[Seq[Json]]
   def approve(id: DocId, approved: Boolean): Task[Option[Json] | ActionResult]
 }
 
 object OnboardingService {
+  def apply(docStore: DocStoreApp)(using telemetry: Telemetry): OnboardingService = Impl(docStore)
 
-  case class Impl(docStore: DocStoreApp)(using telemetry: Telemetry) extends OnboardingService {
+  trait Delegate(underlying: OnboardingService) extends OnboardingService {
+    override def saveDoc(data: Json): Task[DocId | ActionResult] = underlying.saveDoc(data)
+    override def getDraft(id: DocId): Task[Option[Json]]         = underlying.getDraft(id)
+    override def getApprovedDoc(id: DocId): Task[Option[Json]]   = underlying.getApprovedDoc(id)
+    override def listDrafts(): Task[Seq[Json]]                   = underlying.listDrafts()
+    override def listApprovedDocs(): Task[Seq[Json]]             = underlying.listApprovedDocs()
+    override def approve(id: DocId, approved: Boolean): Task[Option[Json] | ActionResult] =
+      underlying.approve(id, approved)
+
+  }
+
+  private class Impl(docStore: DocStoreApp)(using telemetry: Telemetry) extends OnboardingService {
 
     override def saveDoc(data: Json): Task[DocId | ActionResult] = {
       val action = data.withKey("input").merge("saveDoc".withKey("action"))
@@ -87,8 +100,17 @@ object OnboardingService {
       }
     }
 
-    override def getDoc(id: DocId): Task[Option[Json]] = {
-      val action = id.withKey("input").merge("getDoc".withKey("action"))
+    override def getApprovedDoc(id: DocId): Task[Option[Json]] = {
+      val action = id.withKey("input").merge("getApprovedDoc".withKey("action"))
+      val found: Option[Json] = docStore.getDocumentLatest(s"docs/approved/${id}") match {
+        case GetDocument404Response(_) => None
+        case data: Json                => Some(data)
+      }
+      found.asTaskTraced(OnboardingSvc.id, DB.id, action)
+    }
+
+    override def getDraft(id: DocId): Task[Option[Json]] = {
+      val action = id.withKey("input").merge("getDraft".withKey("action"))
       val found: Option[Json] = docStore.getDocumentLatest(s"docs/drafts/${id}") match {
         case GetDocument404Response(_) => None
         case data: Json                => Some(data)
@@ -97,7 +119,7 @@ object OnboardingService {
     }
 
     override def approve(id: DocId, approved: Boolean) = {
-      getDoc(id).flatMap {
+      getDraft(id).flatMap {
         case Some(data) =>
           val action = id.withKey("input").merge("approve".withKey("action"))
 
@@ -142,7 +164,5 @@ object OnboardingService {
     }
 
   }
-
-  def apply(docStore: DocStoreApp)(using telemetry: Telemetry) = Impl(docStore)
 
 }

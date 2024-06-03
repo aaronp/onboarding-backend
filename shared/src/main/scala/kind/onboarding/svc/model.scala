@@ -6,9 +6,16 @@ import upickle.default.ReadWriter
   *
   * @param name
   */
-case class DraftDoc(name: String, category: String, subCategory: String) derives ReadWriter {
-  def approve(flag: Boolean) = ApprovedDoc(name, category, subCategory, approved = flag)
+case class DraftDoc(name: String, category: String, subCategory: String, ownerUserId: String)
+    derives ReadWriter {
+  def approve(flag: Boolean) =
+    ApprovedDoc(name, category, subCategory, ownerUserId, approved = flag)
 }
 
-case class ApprovedDoc(name: String, category: String, subCategory: String, approved: Boolean)
-    derives ReadWriter
+case class ApprovedDoc(
+    name: String,
+    category: String,
+    subCategory: String,
+    ownerUserId: String,
+    approved: Boolean
+) derives ReadWriter
