@@ -17,6 +17,7 @@ trait OnboardingService {
   def getDraft(id: DocId): Task[Option[Json]]
   def getApprovedDoc(id: DocId): Task[Option[Json]]
   def listDrafts(): Task[Seq[Json]]
+  def listDraftsForUser(userId: String): Task[Seq[Json]]
   def listApprovedDocs(): Task[Seq[Json]]
   def approve(id: DocId, approved: Boolean): Task[Option[Json] | ActionResult]
 }
@@ -31,6 +32,7 @@ object OnboardingService {
     override def getApprovedDoc(id: DocId): Task[Option[Json]] =
       onboardingService.getApprovedDoc(id)
     override def listDrafts(): Task[Seq[Json]]       = onboardingService.listDrafts()
+    override def listDraftsForUser(userId: String)   = onboardingService.listDraftsForUser(userId)
     override def listApprovedDocs(): Task[Seq[Json]] = onboardingService.listApprovedDocs()
     override def approve(id: DocId, approved: Boolean): Task[Option[Json] | ActionResult] =
       onboardingService.approve(id, approved)
@@ -88,6 +90,23 @@ object OnboardingService {
             latest.map(_.merge(id.withKey("_id")))
           }.toSeq
       }
+    }
+
+    override def listDraftsForUser(userId: String) = {
+      val action = "listDrafts".withKey("action").merge(userId.withKey("input"))
+      listDrafts()
+        .map { docs =>
+          docs.flatMap { doc =>
+            doc("data")
+              .as[DraftDoc]
+              .toOption
+              .filter { draftDoc =>
+                draftDoc.ownerUserId == userId
+              }
+              .map(_ => doc)
+          }
+        }
+        .traceWith(OnboardingSvc.id, OnboardingSvc.id, action)
     }
 
     override def listDrafts(): Task[Seq[Json]] = {
