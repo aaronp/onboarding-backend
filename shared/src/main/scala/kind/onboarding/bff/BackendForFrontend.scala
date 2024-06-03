@@ -14,7 +14,7 @@ import kind.onboarding.svc.OnboardingService
 
 /** Representation of a single point of entry for our front-end
   */
-trait BackendForFrontend {
+trait BackendForFrontend extends OnboardingService {
 
   // === Users / AUTH ===
   def createNewUser(user: User): Task[ActionResult]
@@ -39,7 +39,9 @@ object BackendForFrontend {
 
   def emptyJson = Map[String, String]().asUJson
 
-  def apply(docStore: DocStoreApp)(using telemetry: Telemetry): BackendForFrontend = {
+  def apply(
+      docStore: DocStoreApp
+  )(using telemetry: Telemetry): BackendForFrontend & OnboardingService = {
     val category = Categories(docStore)
     val svc      = OnboardingService(docStore)
     new Impl(category, category, svc, docStore)
@@ -51,7 +53,8 @@ object BackendForFrontend {
       svc: OnboardingService,
       docStore: DocStoreApp
   )(using telemetry: Telemetry)
-      extends BackendForFrontend {
+      extends BackendForFrontend
+      with OnboardingService.Delegate(svc) {
 
     override def createNewUser(user: User) = {
       val id = user.name

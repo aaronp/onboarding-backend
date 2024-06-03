@@ -24,14 +24,15 @@ trait OnboardingService {
 object OnboardingService {
   def apply(docStore: DocStoreApp)(using telemetry: Telemetry): OnboardingService = Impl(docStore)
 
-  trait Delegate(underlying: OnboardingService) extends OnboardingService {
-    override def saveDoc(data: Json): Task[DocId | ActionResult] = underlying.saveDoc(data)
-    override def getDraft(id: DocId): Task[Option[Json]]         = underlying.getDraft(id)
-    override def getApprovedDoc(id: DocId): Task[Option[Json]]   = underlying.getApprovedDoc(id)
-    override def listDrafts(): Task[Seq[Json]]                   = underlying.listDrafts()
-    override def listApprovedDocs(): Task[Seq[Json]]             = underlying.listApprovedDocs()
+  trait Delegate(onboardingService: OnboardingService) extends OnboardingService {
+    override def saveDoc(data: Json): Task[DocId | ActionResult] = onboardingService.saveDoc(data)
+    override def getDraft(id: DocId): Task[Option[Json]]         = onboardingService.getDraft(id)
+    override def getApprovedDoc(id: DocId): Task[Option[Json]] =
+      onboardingService.getApprovedDoc(id)
+    override def listDrafts(): Task[Seq[Json]]       = onboardingService.listDrafts()
+    override def listApprovedDocs(): Task[Seq[Json]] = onboardingService.listApprovedDocs()
     override def approve(id: DocId, approved: Boolean): Task[Option[Json] | ActionResult] =
-      underlying.approve(id, approved)
+      onboardingService.approve(id, approved)
 
   }
 
