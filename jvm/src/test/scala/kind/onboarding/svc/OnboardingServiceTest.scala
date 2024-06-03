@@ -17,10 +17,10 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
 
     def database: PathTree = handler.asTree.execOrThrow()
 
-    def saveDraft(json : Json): DocId = {
+    def saveDraft(json: Json): DocId = {
       service.saveDoc(json).execOrThrow() match {
         case result: ActionResult => fail(s"Expected a failed result, not " + result)
-        case id : DocId => id
+        case id: DocId            => id
       }
     }
   }
@@ -30,7 +30,6 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
 
       val underTest = new UnderTest
       import underTest.*
-
 
       //          service.saveDoc("invalid".withKey("example"))
 
@@ -50,7 +49,7 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
 
       service.saveDoc("invalid".withKey("example")).execOrThrow() match {
         case result: ActionResult => result.success shouldBe false
-        case other => fail(s"Expected a failed result, not " + other)
+        case other                => fail(s"Expected a failed result, not " + other)
       }
     }
     "be able to save and update version documents" in {
@@ -58,7 +57,7 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       import underTest.*
 
       val doc = DraftDoc("hello", "transport", "submarines")
-      val id = underTest.saveDraft(doc.merge("extra".withKey("info")))
+      val id  = underTest.saveDraft(doc.merge("extra".withKey("info")))
       println(underTest.database.formatted)
 
       val id2 = underTest.saveDraft(doc.merge("more".withKey("information")))

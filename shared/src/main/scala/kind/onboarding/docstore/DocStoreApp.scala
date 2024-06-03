@@ -2,6 +2,7 @@ package kind.onboarding.docstore
 
 import kind.onboarding.Systems
 import kind.logic.*
+import kind.logic.json.Filter
 import kind.logic.telemetry.*
 import kind.onboarding.docstore.model.*
 import kind.onboarding.docstore.api.*
@@ -43,7 +44,7 @@ object DocStoreApp {
     override protected def appCoords = Systems.DB.id
 
     override def query(path: String, filter: Option[String]): List[ujson.Value] = {
-      run(DocStoreLogic.query(path, filter)).execOrThrow()
+      run(DocStoreLogic.query(path, filter.fold(Filter.Pass)(text => Filter.ContainsAny(text)))).execOrThrow()
     }
     def withOverride(overrideFn: PartialFunction[DocStoreLogic[?], Result[?]]): App = {
       val newLogic: [A] => DocStoreLogic[A] => Result[A] = [A] => {

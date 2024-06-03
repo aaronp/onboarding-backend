@@ -3,9 +3,10 @@ package kind.onboarding.svc
 import kind.onboarding.*
 import kind.onboarding.docstore.model.*
 import kind.logic.*
+import kind.logic.{as => jsonAs}
+import kind.logic.json.Filter
 import kind.logic.telemetry.Telemetry
 import kind.onboarding.docstore.DocStoreApp
-import kind.logic.ActionResult
 import zio.*
 import util.*
 import Systems.*
@@ -24,12 +25,12 @@ object OnboardingService {
 
     override def saveDoc(data: Json): Task[DocId | ActionResult] = {
       val action = data.withKey("input").merge("saveDoc".withKey("action"))
-      data.as[DraftDoc] match {
+      data.jsonAs[DraftDoc] match {
         case Success(doc) =>
           val id = asId(doc.name)
 
           // check so we don't naughtily approve draft docs here
-          data.as[ApprovedDoc] match {
+          data.jsonAs[ApprovedDoc] match {
             case Success(alreadyApproved) if alreadyApproved.approved =>
               ActionResult
                 .fail(s"Rejected as doc '${id}' is already approved: ${data.render(2)}")
@@ -68,7 +69,7 @@ object OnboardingService {
         case Some(data) =>
           val action = id.withKey("input").merge("approve".withKey("action"))
 
-          data.as[DraftDoc] match {
+          data.jsonAs[DraftDoc] match {
             case Success(draft) =>
               docStore
                 .upsertDocumentVersioned(s"approved/${id}", draft.approve(true).asUJson)

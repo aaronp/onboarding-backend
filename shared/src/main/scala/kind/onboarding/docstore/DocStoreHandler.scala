@@ -3,6 +3,7 @@ package kind.onboarding.docstore
 import kind.onboarding.docstore.model.*
 import kind.onboarding.Systems.*
 import kind.logic.telemetry.*
+import kind.logic.json.Filter
 import zio.*
 import kind.logic.json.*
 import kind.logic.*
@@ -37,7 +38,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
     task.taskAsResultTraced(DB.id, command)
   }
 
-  def onQuery(command: DocStoreLogic.Query, path: String, filterOpt: Option[String]) = {
+  def onQuery(command: DocStoreLogic.Query, path: String, filterOpt: Filter) = {
     val task = for {
       latest <- ref.get
       parts   = path.asPath
