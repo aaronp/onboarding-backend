@@ -61,6 +61,7 @@ package object js {
   extension (json: js.Dynamic) {
     def asJsonString: String      = JSON.stringify(json)
     def as[A: ReadWriter]: Try[A] = asJsonString.jsonStringAs[A]
+    def jsonAsUJson: Try[Json]    = as[Json]
     def runWithJsonAs[A: ReadWriter, B](f: A => Task[B]): B | ActionResult =
       asJsonString.runWithJsonAs[A, B](f)
   }

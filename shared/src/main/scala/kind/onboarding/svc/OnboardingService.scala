@@ -13,7 +13,7 @@ import Systems.*
 import upickle.default.*
 
 trait OnboardingService {
-  def saveDoc(data: Json): Task[DocId | ActionResult]
+  def saveDraft(data: Json): Task[DocId | ActionResult]
   def getDraft(id: DocId): Task[Option[Json]]
   def getApprovedDoc(id: DocId): Task[Option[Json]]
   def listDrafts(): Task[Seq[Json]]
@@ -25,8 +25,9 @@ object OnboardingService {
   def apply(docStore: DocStoreApp)(using telemetry: Telemetry): OnboardingService = Impl(docStore)
 
   trait Delegate(onboardingService: OnboardingService) extends OnboardingService {
-    override def saveDoc(data: Json): Task[DocId | ActionResult] = onboardingService.saveDoc(data)
-    override def getDraft(id: DocId): Task[Option[Json]]         = onboardingService.getDraft(id)
+    override def saveDraft(data: Json): Task[DocId | ActionResult] =
+      onboardingService.saveDraft(data)
+    override def getDraft(id: DocId): Task[Option[Json]] = onboardingService.getDraft(id)
     override def getApprovedDoc(id: DocId): Task[Option[Json]] =
       onboardingService.getApprovedDoc(id)
     override def listDrafts(): Task[Seq[Json]]       = onboardingService.listDrafts()
@@ -38,8 +39,8 @@ object OnboardingService {
 
   private class Impl(docStore: DocStoreApp)(using telemetry: Telemetry) extends OnboardingService {
 
-    override def saveDoc(data: Json): Task[DocId | ActionResult] = {
-      val action = data.withKey("input").merge("saveDoc".withKey("action"))
+    override def saveDraft(data: Json): Task[DocId | ActionResult] = {
+      val action = data.withKey("input").merge("saveDraft".withKey("action"))
       data.jsonAs[DraftDoc] match {
         case Success(doc) =>
           val id = asId(doc.name)
