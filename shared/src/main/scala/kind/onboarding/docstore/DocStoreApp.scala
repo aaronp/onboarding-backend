@@ -14,7 +14,7 @@ trait DocStoreApp extends DefaultService {
     * NOTE: we could make this the default behaviour, or add it to the REST service
     */
   def saveDocumentVersioned(path: String, body: Json): String
-  def updateDocumentVersioned(path: String, body: Json): String
+  def upsertDocumentVersioned(path: String, body: Json): String
 
   def getDocumentLatest(path: String): Json | GetDocument404Response
 
@@ -101,13 +101,13 @@ object DocStoreApp {
       * @return
       *   the path of the new document
       */
-    override def updateDocumentVersioned(path: String, body: Json) = {
+    override def upsertDocumentVersioned(path: String, body: Json) = {
       getDocumentLatest(path) match {
         case data: Json =>
           val newPath = saveDocumentVersioned(path, data)
           updateDocument(newPath, body)
           newPath
-        case notFound: GetDocument404Response => ""
+        case notFound: GetDocument404Response => saveDocumentVersioned(path, body)
       }
     }
     private def asVersion(size: Int) = s"v$size"

@@ -117,9 +117,10 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
     val fullPath = path.asPath.filter(_.nonEmpty)
     val task = for {
       latest <- ref.get
-      value = latest.at(fullPath ++ versionOpt.toList)
-      data  = value.map(_.data).getOrElse(ujson.Null)
-    } yield data
+      value    = latest.at(fullPath ++ versionOpt.toList)
+      data     = value.map(_.data).getOrElse(ujson.Null)
+      response = if data.isNull then GetDocument404Response() else data
+    } yield response
 
     task.taskAsResultTraced(DB.id, command)
   }

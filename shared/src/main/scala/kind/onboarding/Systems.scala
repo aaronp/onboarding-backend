@@ -12,6 +12,8 @@ enum Systems(val id: Actor):
   case DB  extends Systems(Actor.database(Systems.Namespace, "DB"))
   // case Auth extends Systems(Actor.service(Systems.Namespace, "auth"))
 
+  case OnboardingSvc extends Systems(Actor.service(Systems.RefData, "onboarding-service"))
+
   case CategoryRead  extends Systems(Actor.service(Systems.RefData, "categories"))
   case CategoryAdmin extends Systems(Actor.service(Systems.RefData, "categories-admin"))
 

@@ -24,7 +24,7 @@ class DocStoreAppTest extends AnyWordSpec with Matchers {
       app.getDocumentLatest("original/document") shouldBe ujson.Obj("over" -> "written")
 
       // update it at the same path ... version 3
-      val updatedPath = app.updateDocumentVersioned("original/document", ujson.Obj("up" -> "dated"))
+      val updatedPath = app.upsertDocumentVersioned("original/document", ujson.Obj("up" -> "dated"))
       updatedPath shouldBe "original/document/v2"
       app.getDocumentLatest("original/document") shouldBe ujson.Obj(
         "over" -> "written",
