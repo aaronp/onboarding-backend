@@ -12,4 +12,13 @@ case class DashboardPage(services: Services) {
       drafts.map(_.asJSON).toJSArray
     }
   }
+
+  def withdrawDraft(draftId: JS) = {
+    println(s"withdrawDraft(${draftId})")
+    services.bff.withdraw(draftId.toString(), true).execOrThrow() match {
+      case result: ActionResult => result.asJSON
+      case Some(json)           => json.asJSON
+      case None                 => ActionResult.fail(s"draft '${draftId}' not found").asJSON
+    }
+  }
 }
