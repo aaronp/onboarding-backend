@@ -43,14 +43,14 @@ package object js {
   }
 
   extension (jason: String) {
-    def asJsonValue: Try[Value]   = Try(ujson.read(jason))
-    def as[A: ReadWriter]: Try[A] = Try(read[A](jason))
+    def asJsonValue: Try[Value]             = Try(ujson.read(jason))
+    def jsonStringAs[A: ReadWriter]: Try[A] = Try(read[A](jason))
 
     /** postfix syntax to try and parse the json string as an instance of A, then using that value
       * as an input to the operation
       */
     def runWithJsonAs[A: ReadWriter, B](f: A => Task[B]): ActionResult | B = {
-      jason.as[A] match {
+      jason.jsonStringAs[A] match {
         case Success(value) => f(value).getOrActionResult
         case Failure(err) =>
           ActionResult.fail(s"Error parsing json: >${jason}<")
@@ -60,7 +60,7 @@ package object js {
 
   extension (json: js.Dynamic) {
     def asJsonString: String      = JSON.stringify(json)
-    def as[A: ReadWriter]: Try[A] = asJsonString.as[A]
+    def as[A: ReadWriter]: Try[A] = asJsonString.jsonStringAs[A]
     def runWithJsonAs[A: ReadWriter, B](f: A => Task[B]): B | ActionResult =
       asJsonString.runWithJsonAs[A, B](f)
   }

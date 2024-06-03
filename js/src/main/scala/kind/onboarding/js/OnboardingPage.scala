@@ -20,6 +20,10 @@ case class OnboardingPage(services: Services) {
       .toJSArray
   }
 
+  def onSaveDraft(draft: JS) = {
+    println(s"onSaveDraft: ${draft.asJsonString}")
+
+  }
   def subCategoryOptions(category: JS) = {
     services.bff.getCategory(category.toString).execOrThrow() match {
       case Some(Category(_, subCategories)) =>

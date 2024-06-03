@@ -71,7 +71,7 @@ object Services {
   def readDatabase(name: String): Option[PathTree] = {
     try {
       Option(dom.window.localStorage.getItem(name)).flatMap { value =>
-        value.as[PathTree].toOption
+        value.jsonStringAs[PathTree].toOption
       }
     } catch {
       case NonFatal(e) =>
