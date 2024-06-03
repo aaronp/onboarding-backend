@@ -14,6 +14,7 @@ import upickle.default.*
 trait OnboardingService {
   def saveDoc(data: Json): Task[DocId | ActionResult]
   def getDoc(id: DocId): Task[Option[Json]]
+  def listDocs(): Task[Seq[Json]]
   def approve(id: DocId): Task[Option[Json] | ActionResult]
 }
 
@@ -32,12 +33,13 @@ object OnboardingService {
             case Success(alreadyApproved) if alreadyApproved.approved =>
               ActionResult
                 .fail(s"Rejected as doc '${id}' is already approved: ${data.render(2)}")
-                .asTaskTraced(OnboardingSvc.id, OnboardingSvc.id, action)
+                .asTaskTraced(OnboardingSvc.id, DB.id, action)
             case _ =>
               // good - there sholdn't be an 'approved' field at this stage
               docStore
                 .upsertDocumentVersioned(s"drafts/${id}", data)
-                .asTaskTraced(OnboardingSvc.id, OnboardingSvc.id, action)
+                .asTaskTraced(OnboardingSvc.id, DB.id, action)
+                .as(id)
           }
 
         case Failure(err) =>
@@ -46,16 +48,22 @@ object OnboardingService {
             .asTaskTraced(OnboardingSvc.id, OnboardingSvc.id, action)
       }
     }
-    def getDoc(id: DocId): Task[Option[Json]] = {
+
+    override def listDocs(): Task[Seq[Json]] = {
+      val action = "listDocs".withKey("action")
+      docStore.query("drafts", None).asTaskTraced(OnboardingSvc.id, DB.id, action)
+    }
+
+    override def getDoc(id: DocId): Task[Option[Json]] = {
       val action = id.withKey("input").merge("getDoc".withKey("action"))
       val found: Option[Json] = docStore.getDocumentLatest(s"drafts/${id}") match {
         case GetDocument404Response(_) => None
         case data: Json                => Some(data)
       }
-      found.asTaskTraced(OnboardingSvc.id, OnboardingSvc.id, action)
+      found.asTaskTraced(OnboardingSvc.id, DB.id, action)
     }
 
-    def approve(id: DocId) = {
+    override def approve(id: DocId) = {
       getDoc(id).flatMap {
         case Some(data) =>
           val action = id.withKey("input").merge("approve".withKey("action"))
@@ -64,7 +72,7 @@ object OnboardingService {
             case Success(draft) =>
               docStore
                 .upsertDocumentVersioned(s"approved/${id}", draft.approve(true).asUJson)
-                .asTaskTraced(OnboardingSvc.id, OnboardingSvc.id, action)
+                .asTaskTraced(OnboardingSvc.id, DB.id, action)
                 .map(Some(_))
             case Failure(thisShouldntHappen) =>
               ActionResult

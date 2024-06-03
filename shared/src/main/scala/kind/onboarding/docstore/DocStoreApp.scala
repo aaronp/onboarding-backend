@@ -22,6 +22,8 @@ trait DocStoreApp extends DefaultService {
 
 object DocStoreApp {
 
+  def inMemory(using telemetry: Telemetry): DocStoreApp = apply(DocStoreHandler())
+
   def apply(impl: DocStoreHandler)(using telemetry: Telemetry): DocStoreApp = {
     val logic: [A] => DocStoreLogic[A] => Result[A] = impl.defaultProgram
     App(logic)

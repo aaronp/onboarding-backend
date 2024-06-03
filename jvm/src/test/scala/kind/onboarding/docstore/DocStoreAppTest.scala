@@ -9,7 +9,7 @@ class DocStoreAppTest extends AnyWordSpec with Matchers {
 
   "DocStoreApp.saveDocumentVersioned, getDocumentLatest" should {
     "save a new entry for a document" in {
-      val app = DocStoreApp()(using Telemetry())
+      val app = DocStoreApp.inMemory(using Telemetry())
 
       // start with some data at a given path ... version 1
       val originalPath =
@@ -68,13 +68,13 @@ class DocStoreAppTest extends AnyWordSpec with Matchers {
   "DocStoreApp.listChildren" should {
 
     "return an empty list for nonexistent nodes" in {
-      val app = DocStoreApp()(using Telemetry())
+      val app = DocStoreApp.inMemory(using Telemetry())
       app.listChildren("") should be(empty)
       app.listChildren("/") should be(empty)
       app.listChildren("/what/ever") should be(empty)
     }
     "return the root nodes" in {
-      val app = DocStoreApp()(using Telemetry())
+      val app = DocStoreApp.inMemory(using Telemetry())
       app.listChildren("") should be(empty)
       app.listChildren("/") should be(empty)
 
@@ -85,7 +85,7 @@ class DocStoreAppTest extends AnyWordSpec with Matchers {
       app.listChildren("/") should contain only ("first", "second")
     }
     "be able to list the children" in {
-      val app = DocStoreApp()(using Telemetry())
+      val app = DocStoreApp.inMemory(using Telemetry())
       app.saveDocument("a/b/c1", ujson.Obj("hello" -> "World"))
       app.saveDocument("a/b/c2", ujson.Obj("second" -> "child"))
       app.saveDocument("a/b/c3", ujson.Obj("third" -> "kid"))
