@@ -1,7 +1,7 @@
 package kind.onboarding.docstore
 
 import kind.logic.*
-import kind.logic.json.Filter
+import kind.logic.json.*
 import kind.onboarding.docstore.model.*
 import ujson.Value
 
@@ -14,6 +14,7 @@ enum DocStoreLogic[A]:
   case DeleteDocument(path: String)
       extends DocStoreLogic[DeleteDocument200Response | GetDocument404Response]
   case ListChildren(path: String)          extends DocStoreLogic[List[String]]
+  case GetNode(path: String)               extends DocStoreLogic[Option[PathTree]]
   case Query(path: String, filter: Filter) extends DocStoreLogic[List[Json]]
   case GetDocument(path: String, version: Option[String])
       extends DocStoreLogic[Json | GetDocument404Response]
@@ -45,9 +46,14 @@ object DocStoreLogic {
   ): Program[DocStoreLogic, DeleteDocument200Response | GetDocument404Response] = {
     DeleteDocument(path).asProgram
   }
+
   def listChildren(
       path: String
   ): Program[DocStoreLogic, List[String]] = ListChildren(path).asProgram
+
+  def getNode(
+      path: String
+  ): Program[DocStoreLogic, Option[PathTree]] = GetNode(path).asProgram
 
   def get(
       path: String,

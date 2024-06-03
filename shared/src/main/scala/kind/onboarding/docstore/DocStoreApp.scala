@@ -6,6 +6,7 @@ import kind.logic.json.Filter
 import kind.logic.telemetry.*
 import kind.onboarding.docstore.model.*
 import kind.onboarding.docstore.api.*
+import kind.logic.json.PathTree
 
 trait DocStoreApp extends DefaultService {
 
@@ -18,6 +19,13 @@ trait DocStoreApp extends DefaultService {
   def upsertDocumentVersioned(path: String, body: Json): String
 
   def getDocumentLatest(path: String): Json | GetDocument404Response
+
+  /** TODO - make this work w/ the default contract-first api
+    *
+    * @param path
+    * @return
+    */
+  def getNode(path: String): Option[PathTree]
 
 }
 
@@ -43,8 +51,11 @@ object DocStoreApp {
       with DocStoreApp {
     override protected def appCoords = Systems.DB.id
 
+    override def getNode(path: String): Option[PathTree] =
+      run(DocStoreLogic.getNode(path)).execOrThrow()
     override def query(path: String, filter: Option[String]): List[ujson.Value] = {
-      run(DocStoreLogic.query(path, filter.fold(Filter.Pass)(text => Filter.ContainsAny(text)))).execOrThrow()
+      run(DocStoreLogic.query(path, filter.fold(Filter.Pass)(text => Filter.ContainsAny(text))))
+        .execOrThrow()
     }
     def withOverride(overrideFn: PartialFunction[DocStoreLogic[?], Result[?]]): App = {
       val newLogic: [A] => DocStoreLogic[A] => Result[A] = [A] => {

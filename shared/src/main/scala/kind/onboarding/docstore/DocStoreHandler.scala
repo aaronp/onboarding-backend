@@ -23,6 +23,16 @@ object DocStoreHandler {
   */
 trait DocStoreHandler(ref: Ref[PathTree]) {
 
+  def onGetNode(command: DocStoreLogic.GetNode, path: String): Result[Option[PathTree]] = {
+    val task = for {
+      latest <- ref.get
+      pathAsList = path.asPath.filterNot(_.isEmpty)
+      children   = if pathAsList.isEmpty then Option(latest) else latest.at(pathAsList)
+    } yield children
+
+    task.taskAsResultTraced(DB.id, command)
+  }
+
   def onListChildren(command: DocStoreLogic.ListChildren, path: String): Result[Seq[String]] = {
     def kids(latest: PathTree, pathList: Seq[String]) = {
       latest.at(pathList).fold(List.empty[String])(_.children.keySet.toList.sorted)
@@ -151,6 +161,7 @@ trait DocStoreHandler(ref: Ref[PathTree]) {
       val result = input match {
         case command @ DocStoreLogic.Query(path, filter) =>
           onQuery(command, path, filter)
+        case command @ DocStoreLogic.GetNode(path)      => onGetNode(command, path)
         case command @ DocStoreLogic.ListChildren(path) => onListChildren(command, path)
         case command @ DocStoreLogic.CompareDocuments(
               CompareDocumentsRequest(Some(leftPath), Some(rightPath))
