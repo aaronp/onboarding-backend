@@ -27,8 +27,9 @@ private[svc] object SaveDraft {
               .asTaskTraced(OnboardingSvc.id, DB.id, action)
           case _ =>
             // good - there sholdn't be an 'approved' field at this stage
+
             docStore
-              .upsertDocumentVersioned(s"docs/drafts/${id}", data)
+              .upsertDocumentVersioned(s"docs/drafts/${id}", data.withTimestamp())
               .asTaskTraced(OnboardingSvc.id, DB.id, action)
               .as(id)
         }

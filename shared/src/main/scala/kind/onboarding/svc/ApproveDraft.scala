@@ -22,7 +22,7 @@ private[svc] object ApproveDraft {
       case Some(data) =>
         def updateDraft(draft: DraftDoc): String = docStore.upsertDocumentVersioned(
           s"docs/drafts/${id}",
-          data.merge(draft.approve(approved).asUJson)
+          data.merge(draft.approve(approved).asUJson.withTimestamp())
         )
 
         data.as[DraftDoc] match {
