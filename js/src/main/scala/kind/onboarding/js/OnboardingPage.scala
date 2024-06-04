@@ -5,14 +5,15 @@ import kind.onboarding.bff._
 import kind.onboarding.refdata._
 
 import scala.scalajs.js.JSConverters._
-import scala.scalajs.js.annotation.JSExportAll
+import scala.scalajs.js.annotation._
 
 import util._
 
 @JSExportAll
 case class OnboardingPage(services: Services) {
 
-  def categoryOptions() = {
+  @JSExport("categoryOptions")
+  def categoryOptions(): scala.scalajs.js.Array[JS] = {
     services.bff
       .listCategories()
       .execOrThrow()
@@ -20,6 +21,13 @@ case class OnboardingPage(services: Services) {
         LabeledValue(name, name).asJSON
       }
       .toJSArray
+  }
+
+  def loadProduct(draftId: String) = {
+    services.bff.getDraft(draftId).execOrThrow() match {
+      case Some(draft) => draft.asJSON
+      case None        => ActionResult.fail(s"Draft not found: ${draftId}").asJSON
+    }
   }
 
   def onSaveDraft(draft: JS) = {

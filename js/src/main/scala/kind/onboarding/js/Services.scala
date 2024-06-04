@@ -64,7 +64,7 @@ case class Services(
   def currentDatabaseName() = databaseName
   def currentDatabase()     = LabeledValue(databaseName).asJSON
 
-  def snapshotDatabase() = saveDatabaseAs("default")
+  def snapshotDatabase() = saveDatabaseAs(databaseName)
 
   def listUsers() = bff.listUsers().getAsJS(_.toJSArray)
 
@@ -78,6 +78,10 @@ case class Services(
 
   def listDatabaseKeys() = Services.listDatabaseKeys(databaseName)
 
+  def resetService() = {
+    snapshotDatabase()
+    reloadService(databaseName)
+  }
   def reloadService(dbName: String): Services = Services.createServiceForName(dbName)
 }
 
