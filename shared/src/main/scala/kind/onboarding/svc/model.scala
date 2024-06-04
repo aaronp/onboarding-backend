@@ -16,6 +16,10 @@ case class DraftDoc(
     ApprovedDoc(name, category, subCategory, ownerUserId, approved = flag)
 }
 
+case class HasApproved(approved: Boolean) derives ReadWriter
+
+case class HasWithdrawn(withdrawn: Boolean) derives ReadWriter
+
 case class ApprovedDoc(
     name: String,
     category: String,

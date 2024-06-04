@@ -4,14 +4,20 @@ import scala.scalajs.js.annotation._
 import kind.logic.*
 import kind.logic.json.*
 import scala.scalajs.js.JSConverters._
+import kind.onboarding.svc.*
 
 @JSExportAll
 case class OperationsDashboardPage(services: Services) {
 
-  def listDrafts() = {
+//   @JSExport("listUnapprovedDrafts")
+  def listUnapprovedDrafts() = {
     import scala.scalajs.js.JSConverters._
 
-    services.bff.listDrafts().execOrThrow().map(_.asJSON).toJSArray
+    // the documents either do not have an 'approved' field or they have one which is set to false
+    val unapproved = services.bff.listDrafts().execOrThrow().filter { draftData =>
+      draftData.as[HasApproved].toOption.fold(true)(!_.approved)
+    }
+    unapproved.map(_.asJSON).toJSArray
   }
 
   def withdrawDraft(draftId: JS) = {

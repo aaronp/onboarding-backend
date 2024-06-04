@@ -7,8 +7,13 @@ import scala.scalajs.js.annotation.JSExportAll
 
 @JSExportAll
 case class DocstorePage(services: Services) {
-  def jason() = {
-    services.asTree.map(_.collapse).runAsUJson.asJSON
+
+  /** @return
+    *   both a json and nice formatted dump of the database
+    */
+  def dump() = {
+    val tree = services.asTree.execOrThrow()
+    Seq(tree.formatted, tree.collapse.render(2)).toJSArray
   }
 
   /** @param newName
@@ -21,7 +26,4 @@ case class DocstorePage(services: Services) {
     Seq(db.formatted, db.asJson.render(2)).toJSArray
   }
 
-  def formatted() = {
-    services.asTree.map(_.formatted).execOrThrow()
-  }
 }
