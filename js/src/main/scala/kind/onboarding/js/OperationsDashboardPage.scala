@@ -34,11 +34,8 @@ case class OperationsDashboardPage(services: Services) {
       .listDrafts()
       .execOrThrow()
       .flatMap { draftData =>
-        draftData("data")
-          .as[HasApproved]    //
-          .toOption           //
-          .filter(_.approved) //
-          .map(_.asJSON)
+        val withdrawn = draftData.asHasWithdrawn.fold(false)(_.withdrawn)
+        draftData.asHasApproved.filter(d => d.approved && !withdrawn).map(_ => draftData.asJSON)
       }
       .toJSArray
   }
@@ -51,8 +48,12 @@ case class OperationsDashboardPage(services: Services) {
     }
   }
 
-  def approveDraft(draftId: JS) = {
-    services.bff.approve(draftId.toString(), true).execOrThrow() match {
+  def unapproveDraft(draftId: JS) = doApproveDraft(draftId, false)
+
+  def approveDraft(draftId: JS) = doApproveDraft(draftId, true)
+
+  private def doApproveDraft(draftId: JS, approved: Boolean) = {
+    services.bff.approve(draftId.toString(), approved).execOrThrow() match {
       case result: ActionResult => result.asJSON
       case Some(json)           => json.asJSON
       case None                 => ActionResult.fail(s"draft '${draftId}' not found").asJSON
