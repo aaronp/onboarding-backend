@@ -50,6 +50,12 @@ jobs:
         chmod +x ./genModels.sh
         source ./genModels.sh && buildModels
 
+    - name: Set up Maven settings
+      run: |
+        mkdir -p ~/.m2
+        echo "<settings><servers><server><id>github</id><username>${{ github.actor }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>" > ~/.m2/settings.xml
+
+
     - name: Build & Test Backend
       run: sbt "project appJVM" clean test
     - name: Publish to GitHub Packages
