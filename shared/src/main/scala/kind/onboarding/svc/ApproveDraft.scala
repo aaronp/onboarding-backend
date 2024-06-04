@@ -35,7 +35,7 @@ private[svc] object ApproveDraft {
             // update both the draft and 'approved' documents
             {
               updateDraft(draft)
-              val approvedDoc = data.merge(draft.approve(approved).asUJson)
+              val approvedDoc = data.merge(draft.approve(approved).asUJson.withTimestamp())
               docStore.upsertDocumentVersioned(s"docs/approved/${id}", approvedDoc)
               Option(approvedDoc)
             }

@@ -8,16 +8,16 @@ package object svc {
 
   type DocId = String
 
-  extension (timestamp : ZonedDateTime) {
-    def utc = timestamp.format(java.time.format.DateTimeFormatter.ISO_INSTANT)
+  extension (timestamp: ZonedDateTime) {
+    def utc         = timestamp.format(java.time.format.DateTimeFormatter.ISO_INSTANT)
     def epochMillis = timestamp.toInstant().toEpochMilli()
   }
 
-  extension (data : Json) {
-    def withTimestamp(now : ZonedDateTime = timestamp()) = {
-            data
-                .merge(now.utc.withKey("lastUpdated"))//
-                .merge(now.epochMillis.withKey("lastUpdatedEpochMillis"))
+  extension (data: Json) {
+    def withTimestamp(now: ZonedDateTime = timestamp()) = {
+      data
+        .merge(now.utc.withKey("lastUpdated")) //
+        .merge(now.epochMillis.withKey("lastUpdatedEpochMillis"))
 
     }
   }
