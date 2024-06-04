@@ -1,6 +1,6 @@
 package kind.onboarding
 
-import kind.logic.*
+import kind.logic._
 
 /** List of the components in our system, used for telemetry/tracing
   *

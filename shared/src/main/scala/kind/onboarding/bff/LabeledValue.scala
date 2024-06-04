@@ -1,6 +1,6 @@
 package kind.onboarding.bff
 
-import upickle.default.*
+import upickle.default._
 
 case class LabeledValue(label: String, value: String) derives ReadWriter
 object LabeledValue {

@@ -1,11 +1,11 @@
 package kind.onboarding.refdata
 
-import zio.*
-import kind.onboarding.docstore.*
-import kind.onboarding.Systems.*
-import kind.logic.telemetry.*
-import kind.logic.*
-import upickle.default.*
+import kind.logic._
+import kind.logic.telemetry._
+import kind.onboarding.Systems._
+import kind.onboarding.docstore._
+import upickle.default._
+import zio._
 
 /** The write-end for creating categories, aimed at admins
   */

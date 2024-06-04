@@ -1,8 +1,8 @@
 package kind.onboarding.docstore
 
-import kind.logic.*
-import kind.logic.json.*
-import kind.onboarding.docstore.model.*
+import kind.logic._
+import kind.logic.json._
+import kind.onboarding.docstore.model._
 import ujson.Value
 
 type Json = ujson.Value

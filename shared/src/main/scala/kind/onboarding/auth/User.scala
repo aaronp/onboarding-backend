@@ -1,6 +1,6 @@
 package kind.onboarding.auth
 
-import upickle.default.*
+import upickle.default._
 case class User(
     name: String,
     isEngineering: Boolean,

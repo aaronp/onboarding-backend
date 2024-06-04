@@ -1,15 +1,15 @@
 package kind.onboarding
 
+import kind.logic._
+import kind.logic.json._
 import ujson.Value.Value
-import upickle.default.*
+import upickle.default._
+import zio._
 
-import kind.logic.json.*
-import kind.logic.*
 import scala.scalajs.js
 import scala.scalajs.js.JSON
-import util.*
-import zio.*
-import scala.scalajs.js.annotation.JSExportAll
+
+import util._
 
 package object js {
 

@@ -1,8 +1,9 @@
 package kind.onboarding.refdata
 
+import kind.logic.telemetry._
 import kind.onboarding.docstore.DocStoreApp
-import kind.logic.telemetry.*
-import zio.{Task, *}
+import zio.Task
+import zio._
 
 object Categories {
 

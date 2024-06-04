@@ -1,12 +1,12 @@
 package kind.onboarding.docstore
 
-import kind.onboarding.docstore.model.*
-import kind.onboarding.Systems.*
-import kind.logic.telemetry.*
+import kind.logic._
 import kind.logic.json.Filter
-import zio.*
-import kind.logic.json.*
-import kind.logic.*
+import kind.logic.json._
+import kind.logic.telemetry._
+import kind.onboarding.Systems._
+import kind.onboarding.docstore.model._
+import zio._
 
 object DocStoreHandler {
   def apply(db: PathTree = PathTree.forPath("")): InMemory = {

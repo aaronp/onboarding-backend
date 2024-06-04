@@ -1,13 +1,13 @@
 package kind.onboarding.docstore.js
 
-import kind.logic.js.*
-import kind.logic.telemetry.*
+import kind.logic.js._
+import kind.logic.telemetry._
 import kind.onboarding.docstore.api.DefaultService
-import kind.onboarding.docstore.model.*
+import kind.onboarding.docstore.model._
 import org.scalajs.dom
-import scalatags.JsDom.all.*
+import scalatags.JsDom.all._
 
-import scala.util.*
+import scala.util._
 import scala.util.control.NonFatal
 case class TestContainer(service: DefaultService, telemetry: Telemetry) {
 

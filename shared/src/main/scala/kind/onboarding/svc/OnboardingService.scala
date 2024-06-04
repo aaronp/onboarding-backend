@@ -1,17 +1,16 @@
 package kind.onboarding.svc
 
-import kind.onboarding.*
-import kind.onboarding.docstore.model.*
-import kind.logic.*
-import kind.logic.{as => jsonAs}
-import kind.logic.json.*
+import kind.logic._
+import kind.logic.json._
 import kind.logic.telemetry.Telemetry
+import kind.onboarding._
 import kind.onboarding.docstore.DocStoreApp
-import zio.*
-import util.*
-import Systems.*
-import upickle.default.*
+import kind.onboarding.docstore.model._
 import ujson.Value
+import upickle.default._
+import zio._
+
+import Systems._
 
 trait OnboardingService {
   def saveDraft(data: Json): Task[DocId | ActionResult]
@@ -44,32 +43,7 @@ object OnboardingService {
 
   private class Impl(docStore: DocStoreApp)(using telemetry: Telemetry) extends OnboardingService {
 
-    override def saveDraft(data: Json): Task[DocId | ActionResult] = {
-      val action = data.withKey("input").merge("saveDraft".withKey("action"))
-      data.jsonAs[DraftDoc] match {
-        case Success(doc) =>
-          val id = asId(doc.name)
-
-          // check so we don't naughtily approve draft docs here
-          data.jsonAs[ApprovedDoc] match {
-            case Success(alreadyApproved) if alreadyApproved.approved =>
-              ActionResult
-                .fail(s"Rejected as doc '${id}' is already approved: ${data.render(2)}")
-                .asTaskTraced(OnboardingSvc.id, DB.id, action)
-            case _ =>
-              // good - there sholdn't be an 'approved' field at this stage
-              docStore
-                .upsertDocumentVersioned(s"docs/drafts/${id}", data)
-                .asTaskTraced(OnboardingSvc.id, DB.id, action)
-                .as(id)
-          }
-
-        case Failure(err) =>
-          ActionResult
-            .fail(s"Failed to parse document: ${err.getMessage}")
-            .asTaskTraced(OnboardingSvc.id, OnboardingSvc.id, action)
-      }
-    }
+    override def saveDraft(data: Json): Task[DocId | ActionResult] = SaveDraft(docStore, data)
 
     private def getLatestVersionForNode(doc: PathTree) = {
       val versions = doc.keys.map {
@@ -142,88 +116,10 @@ object OnboardingService {
       found.asTaskTraced(OnboardingSvc.id, DB.id, action)
     }
 
-    override def withdraw(id: DocId, withdrawn: Boolean) = {
-      val action: Json = {
-        id.withKey("id")                         //
-          .merge(withdrawn.withKey("withdrawn")) //
-          .merge("approve".withKey("action"))    //
-      }
+    override def withdraw(id: DocId, withdrawn: Boolean) =
+      WithdrawDraft(docStore, id, getDraft(id), withdrawn)
 
-      getDraft(id).flatMap {
-        case Some(data) =>
-          data.jsonAs[DraftDoc] match {
-            case Success(draft) =>
-              // update the draft as rejected
-              docStore
-                .upsertDocumentVersioned(
-                  s"docs/drafts/${id}",
-                  data.merge(withdrawn.withKey("withdrawn"))
-                )
-                .asTaskTraced(OnboardingSvc.id, DB.id, action)
-                .map(_ => Option.apply(data))
-            case Failure(thisShouldntHappen) =>
-              ActionResult
-                .fail(
-                  s"Corrupted data found for doc '${id}'. Error is ${thisShouldntHappen} for data: ${data
-                      .render(2)}"
-                )
-                .asTaskTraced(OnboardingSvc.id, OnboardingSvc.id, action)
-          }
-        case None =>
-          Option
-            .empty[Json]
-            .asTaskTraced(
-              OnboardingSvc.id,
-              OnboardingSvc.id,
-              id.withKey("input").merge("withdraw".withKey("action"))
-            )
-      }
-    }
-
-    override def approve(id: DocId, approved: Boolean) = {
-      val action =
-        id.withKey("id").merge(approved.withKey("approved")).merge("withdraw".withKey("action"))
-
-      getDraft(id).flatMap {
-        case Some(data) =>
-          def updateDraft(draft: DraftDoc): String = docStore.upsertDocumentVersioned(
-            s"docs/drafts/${id}",
-            data.merge(draft.approve(approved).asUJson)
-          )
-
-          data.jsonAs[DraftDoc] match {
-            case Success(draft) if !approved =>
-              // update the draft as rejected
-              updateDraft(draft)
-                .asTaskTraced(OnboardingSvc.id, DB.id, action)
-                .map(_ => Option.apply(data))
-            case Success(draft) =>
-              // update both the draft and 'approved' documents
-              {
-                updateDraft(draft)
-                val approvedDoc = data.merge(draft.approve(approved).asUJson)
-                docStore.upsertDocumentVersioned(s"docs/approved/${id}", approvedDoc)
-                Option(approvedDoc)
-              }
-                .asTaskTraced(OnboardingSvc.id, DB.id, action)
-
-            case Failure(thisShouldntHappen) =>
-              ActionResult
-                .fail(
-                  s"Corrupted data found for doc '${id}'. Error is ${thisShouldntHappen} for data: ${data
-                      .render(2)}"
-                )
-                .asTaskTraced(OnboardingSvc.id, OnboardingSvc.id, action)
-          }
-        case None =>
-          Option
-            .empty[Json]
-            .asTaskTraced(
-              OnboardingSvc.id,
-              OnboardingSvc.id,
-              id.withKey("input").merge("approve".withKey("action"))
-            )
-      }
-    }
+    override def approve(id: DocId, approved: Boolean) =
+      ApproveDraft(docStore, id, getDraft(id), approved)
   }
 }

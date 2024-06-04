@@ -1,10 +1,10 @@
 package kind.onboarding.refdata
 
-import zio.*
+import kind.logic._
+import kind.logic.telemetry._
+import kind.onboarding.Systems._
 import kind.onboarding.docstore.DocStoreApp
-import kind.onboarding.Systems.*
-import kind.logic.telemetry.*
-import kind.logic.*
+import zio._
 
 trait CategoryService {
   def categories(): Task[Seq[Category]]

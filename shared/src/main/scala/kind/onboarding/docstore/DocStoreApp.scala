@@ -1,12 +1,12 @@
 package kind.onboarding.docstore
 
-import kind.onboarding.Systems
-import kind.logic.*
+import kind.logic._
 import kind.logic.json.Filter
-import kind.logic.telemetry.*
-import kind.onboarding.docstore.model.*
-import kind.onboarding.docstore.api.*
 import kind.logic.json.PathTree
+import kind.logic.telemetry._
+import kind.onboarding.Systems
+import kind.onboarding.docstore.api._
+import kind.onboarding.docstore.model._
 
 trait DocStoreApp extends DefaultService {
 

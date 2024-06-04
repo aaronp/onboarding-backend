@@ -1,10 +1,11 @@
 package kind.onboarding.js
 
-import scala.scalajs.js.annotation.*
-import kind.onboarding.refdata.Category
-import scala.scalajs.js.JSConverters._
 import kind.logic._
 import kind.onboarding.bff.LabeledValue
+import kind.onboarding.refdata.Category
+
+import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.annotation._
 
 @JSExportAll
 case class CategoryPage(services: Services) {

@@ -1,7 +1,7 @@
 package kind.onboarding
 
-import upickle.default.*
-import kind.logic.*
+import kind.logic._
+import upickle.default._
 
 package object refdata {
 

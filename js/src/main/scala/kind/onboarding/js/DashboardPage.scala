@@ -1,8 +1,9 @@
 package kind.onboarding.js
 
+import kind.logic._
+
+import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.annotation.JSExportAll
-import kind.logic.*
-import scala.scalajs.js.JSConverters.*
 
 @JSExportAll
 case class DashboardPage(services: Services) {

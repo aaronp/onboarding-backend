@@ -1,20 +1,21 @@
 package kind.onboarding.js
 
-import kind.logic.*
+import kind.logic._
 import kind.logic.json.PathTree
-import kind.logic.telemetry.*
-import kind.onboarding.bff.*
-import org.scalajs.dom
-import upickle.default.*
-import kind.onboarding.refdata.*
-import scala.scalajs.js
-import scala.scalajs.js.annotation.*
-import scala.util.*
-import scala.util.control.NonFatal
-import kind.onboarding.bff.BackendForFrontend
-import zio.*
+import kind.logic.telemetry._
 import kind.onboarding.auth.User
-import scala.scalajs.js.JSConverters.*
+import kind.onboarding.bff.BackendForFrontend
+import kind.onboarding.bff._
+import kind.onboarding.refdata._
+import org.scalajs.dom
+import upickle.default._
+import zio._
+
+import scala.scalajs.js
+import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.annotation._
+import scala.util._
+import scala.util.control.NonFatal
 
 /** These are the 'convenience' functions made available to the front-end via 'createNewService'
   */

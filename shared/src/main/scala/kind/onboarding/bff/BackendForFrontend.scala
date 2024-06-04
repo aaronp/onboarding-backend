@@ -1,16 +1,18 @@
 package kind.onboarding.bff
 
-import kind.onboarding.Systems.*
-import kind.onboarding.docstore.model.*
-import kind.logic.*
-import kind.logic.telemetry.*
-import kind.onboarding.docstore.DocStoreApp
-import kind.onboarding.refdata.{Category, CategoryAdminService, CategoryService}
-import zio.*
-import kind.onboarding.refdata.Categories
+import kind.logic._
+import kind.logic.telemetry._
+import kind.onboarding.Systems._
 import kind.onboarding.auth.User
-import upickle.default.*
+import kind.onboarding.docstore.DocStoreApp
+import kind.onboarding.docstore.model._
+import kind.onboarding.refdata.Categories
+import kind.onboarding.refdata.Category
+import kind.onboarding.refdata.CategoryAdminService
+import kind.onboarding.refdata.CategoryService
 import kind.onboarding.svc.OnboardingService
+import upickle.default._
+import zio._
 
 /** Representation of a single point of entry for our front-end
   */

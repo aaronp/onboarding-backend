@@ -1,6 +1,7 @@
 package kind.onboarding.js
 
 import kind.logic._
+
 import scala.scalajs.js.annotation.JSExportAll
 
 @JSExportAll

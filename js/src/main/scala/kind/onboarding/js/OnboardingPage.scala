@@ -1,12 +1,13 @@
 package kind.onboarding.js
 
-import kind.onboarding.refdata._
+import kind.logic._
 import kind.onboarding.bff._
-import kind.logic.*
+import kind.onboarding.refdata._
 
-import scala.scalajs.js.annotation.JSExportAll
 import scala.scalajs.js.JSConverters._
-import util.*
+import scala.scalajs.js.annotation.JSExportAll
+
+import util._
 
 @JSExportAll
 case class OnboardingPage(services: Services) {
