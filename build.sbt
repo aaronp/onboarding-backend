@@ -104,13 +104,15 @@ ThisBuild / publishTo := Some("GitHub Package Registry" at s"https://maven.pkg.g
 
 sys.env.get("ACCESS_TOKEN") match {
   case Some(token) if token.nonEmpty =>
+    val actor = sys.env.get("GITHUB_ACTOR").getOrElse(githubUser)
+    println(s"\n\t\tBUILDING USING actor '$actor' and $token \n\n")
     ThisBuild / credentials += Credentials(
       "GitHub Package Registry",
       "maven.pkg.github.com",
-      githubUser,
+      actor,
       token
     )
   case _ =>
-    println("\n\t\tGITHUB_TOKEN not set - assuming a local build\n\n")
+    println("\n\t\tACCESS_TOKEN not set - assuming a local build\n\n")
     credentials ++= Nil
 }
