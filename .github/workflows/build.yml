@@ -23,10 +23,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-sbt-
 
+    - name: Set up working directory
+      run: mkdir -p $GITHUB_WORKSPACE/target/schemas/docstore/target/global-logging
+
     - name: Run genModels script
       run: |
+        echo "current directory is $PWD"
+        echo "$GITHUB_WORKSPACE is $$GITHUB_WORKSPACE"
         chmod +x ./genModels.sh
         source ./genModels.sh && genModels
+      env:
+        TARGET_DIR: $GITHUB_WORKSPACE/target/schemas/docstore/target/global-logging
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
