@@ -17,7 +17,7 @@ private[svc] object SaveDraft {
     val action = data.withKey("input").merge("saveDraft".withKey("action"))
     data.as[DraftDoc] match {
       case Success(doc) =>
-        val id = asId(doc.name)
+        val id = Try(data("id").str).getOrElse(asId(doc.name))
 
         // check so we don't naughtily approve draft docs here
         data.as[ApprovedDoc] match {
@@ -29,7 +29,7 @@ private[svc] object SaveDraft {
             // good - there sholdn't be an 'approved' field at this stage
 
             docStore
-              .upsertDocumentVersioned(s"docs/drafts/${id}", data.withTimestamp())
+              .upsertDocumentVersioned(s"docs/drafts/${id}", data.withTimestamp().withId(id))
               .asTaskTraced(OnboardingSvc.id, DB.id, action)
               .as(id)
         }

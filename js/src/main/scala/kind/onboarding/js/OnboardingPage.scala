@@ -12,7 +12,6 @@ import util._
 @JSExportAll
 case class OnboardingPage(services: Services) {
 
-  @JSExport("categoryOptions")
   def categoryOptions(): scala.scalajs.js.Array[JS] = {
     services.bff
       .listCategories()

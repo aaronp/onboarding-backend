@@ -14,6 +14,7 @@ package object svc {
   }
 
   extension (data: Json) {
+    def withId(id: String) = data.merge(id.withKey("id"))
     def withTimestamp(now: ZonedDateTime = timestamp()) = {
       data
         .merge(now.utc.withKey("lastUpdated")) //
