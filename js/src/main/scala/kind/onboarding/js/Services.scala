@@ -42,6 +42,8 @@ case class Services(
 
   def newOnboardingPage() = OnboardingPage(this)
 
+  def newOperationsDashboardPage() = OperationsDashboardPage(this)
+
   def saveCategories(data: js.Dynamic) =
     data.runWithJsonAs[Seq[Category], ActionResult](bff.saveCategories)
 
