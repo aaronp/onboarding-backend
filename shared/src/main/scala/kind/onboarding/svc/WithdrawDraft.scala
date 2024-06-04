@@ -29,7 +29,7 @@ private[svc] object WithdrawDraft {
             docStore
               .upsertDocumentVersioned(
                 s"docs/drafts/${id}",
-                data.merge(withdrawn.withKey("withdrawn"))
+                data.merge(withdrawn.withKey("withdrawn").withTimestamp())
               )
               .asTaskTraced(OnboardingSvc.id, DB.id, action)
               .map(_ => Option.apply(data))
