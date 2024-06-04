@@ -13,8 +13,10 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get install -y make
 
-    - name: Run generateModels target
-      run: make generateModels
+    - name: Run genModels script
+      run: |
+        chmod +x ./genModels.sh
+        source ./genModels.sh && genModels
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
