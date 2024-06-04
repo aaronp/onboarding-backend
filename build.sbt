@@ -15,6 +15,25 @@ ThisBuild / resolvers += githubResolver
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
+
+ThisBuild / version := {
+  val buildNr = {
+    val runNumber = sys.env.getOrElse("GITHUB_RUN_NUMBER", "0").toInt
+    // this is my little hack. The run numbers always increase, an we want to reset them when
+    // bump to the next version. To do that, we just subtract whatever the last build number was
+    // before we incremented the minor version
+    runNumber - 0
+  }
+  val baseVersion = s"0.5.$buildNr"
+  if (sys.env.getOrElse("GITHUB_REF", "").contains("refs/heads/main"))
+    baseVersion
+  else
+    s"$baseVersion-SNAPSHOT"
+}
+
+ThisBuild / buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
+ThisBuild / buildInfoPackage := "kind.onboarding.backend.buildinfo"
+
 addCommandAlias("removeUnusedImports", ";scalafix RemoveUnused")
 addCommandAlias("organiseImports", ";scalafix OrganizeImports")
 
@@ -79,7 +98,7 @@ lazy val root = project.in(file(".")).
 ThisBuild / publishMavenStyle := true
 
 val githubUser = "aaronp"
-val githubRepo = "kind"
+val githubRepo = "onboarding-backend"
 ThisBuild / publishTo := Some("GitHub Package Registry" at s"https://maven.pkg.github.com/$githubUser/$githubRepo")
 
 sys.env.get("GITHUB_TOKEN") match {

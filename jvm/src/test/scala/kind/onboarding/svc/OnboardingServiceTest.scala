@@ -18,7 +18,7 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
     def database: PathTree = handler.asTree.execOrThrow()
 
     def saveDraft(json: Json): DocId = {
-      service.saveDoc(json).execOrThrow() match {
+      service.saveDraft(json).execOrThrow() match {
         case result: ActionResult => fail(s"Expected a failed result, not " + result)
         case id: DocId            => id
       }
@@ -37,13 +37,20 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       ) shouldBe id
 
       val Some(doc) = service.approve(id, true).execOrThrow()
+
+      doc.obj.keySet should contain("lastUpdated")
+      doc.obj.keySet should contain("lastUpdatedEpochMillis")
+      doc.obj.remove("lastUpdated")
+      doc.obj.remove("lastUpdatedEpochMillis")
+
       doc shouldBe """{
         "approved": true,
         "subCategory": "submarines",
         "data": "more",
+        "ownerUserId": "dave",
         "name": "foo",
-        "category": "transport",
-        "ownerUserId": "dave"
+        "id": "foo",
+        "category": "transport"
       }""".parseAsJson
 
     }
@@ -61,16 +68,25 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
 
       service.listApprovedDocs().execOrThrow().size shouldBe 0
       val Some(doc2) = service.approve(id, true).execOrThrow()
+      Seq(doc2).foreach { doc =>
+        doc.obj.keySet should contain("lastUpdated")
+        doc.obj.keySet should contain("lastUpdatedEpochMillis")
+        doc.obj.remove("lastUpdated")
+        doc.obj.remove("lastUpdatedEpochMillis")
+      }
+
       doc2 shouldBe """{
           "approved": true,
           "subCategory": "submarines",
           "data": "more",
           "ownerUserId": "dave",
           "name": "foo",
+          "id": "foo",
           "category": "transport"
         }""".parseAsJson
 
       val Seq(approvedDoc) = service.listApprovedDocs().execOrThrow()
+
       approvedDoc shouldBe """{
           "data": {
             "approved": true,
@@ -78,6 +94,7 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
             "data": "more",
             "ownerUserId": "dave",
             "name": "foo",
+            "id": "foo",
             "category": "transport"
           },
           "_id": "foo"
@@ -96,13 +113,21 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       val id2 = underTest.saveDraft(DraftDoc("there", "transport", "submarines", "dave").asUJson)
       val updatedDoc = underTest.saveDraft(DraftDoc("there", "changed", "toThis", "dave").asUJson)
 
-      val Seq(a, b) = service.listDrafts().execOrThrow()
+      val docs @ Seq(a, b) = service.listDrafts().execOrThrow()
+      docs.foreach { doc =>
+        doc("data").obj.keySet should contain("lastUpdated")
+        doc("data").obj.keySet should contain("lastUpdatedEpochMillis")
+        doc("data").obj.remove("lastUpdated")
+        doc("data").obj.remove("lastUpdatedEpochMillis")
+      }
+
       a shouldBe """{
           "data": {
-            "name": "hello",
-            "category": "transport",
             "subCategory": "submarines",
-            "ownerUserId": "dave"
+            "ownerUserId": "dave",
+            "name": "hello",
+            "id": "hello",
+            "category": "transport"
           },
           "_id": "hello"
         }""".parseAsJson
@@ -110,9 +135,10 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       b shouldBe """{
         "data": {
           "subCategory": "toThis",
+          "ownerUserId": "dave",
           "name": "there",
-          "category": "changed",
-            "ownerUserId": "dave"
+          "id": "there",
+          "category": "changed"
         },
         "_id": "there"
       }""".parseAsJson
@@ -125,7 +151,7 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       val underTest = new UnderTest
       import underTest.*
 
-      service.saveDoc("invalid".withKey("example")).execOrThrow() match {
+      service.saveDraft("invalid".withKey("example")).execOrThrow() match {
         case result: ActionResult => result.success shouldBe false
         case other                => fail(s"Expected a failed result, not " + other)
       }
@@ -146,14 +172,18 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
 
       // we should get the latest version
       val Seq(latest) = service.listDrafts().execOrThrow()
+
+      latest("data").obj.remove("lastUpdated")
+      latest("data").obj.remove("lastUpdatedEpochMillis")
       latest shouldBe """{
           "data": {
             "subCategory": "submarines",
+            "ownerUserId": "dave",
             "name": "hello",
             "information": "more",
+            "id": "hello",
             "category": "transport",
-            "info": "extra",
-            "ownerUserId": "dave"
+            "info": "extra"
           },
           "_id": "hello"
         }""".parseAsJson
@@ -164,7 +194,7 @@ class OnboardingServiceTest extends AnyWordSpec with Matchers {
       import underTest.*
 
       underTest.service
-        .saveDoc(DraftDoc("hello", "transport", "submarines", "dave").approve(true).asUJson)
+        .saveDraft(DraftDoc("hello", "transport", "submarines", "dave").approve(true).asUJson)
         .execOrThrow() match {
         case result: ActionResult =>
           result.success shouldBe false

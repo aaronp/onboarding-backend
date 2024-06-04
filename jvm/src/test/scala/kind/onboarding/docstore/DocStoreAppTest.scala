@@ -17,7 +17,7 @@ class DocStoreAppTest extends AnyWordSpec with Matchers {
       originalPath shouldBe "original/document/v0"
       app.getDocumentLatest("original/document") shouldBe ujson.Obj("hello" -> "World")
 
-      // overrwrite it at the same path ... version 2
+      // overwrite it at the same path ... version 2
       val newVersionPath =
         app.saveDocumentVersioned("original/document", ujson.Obj("over" -> "written"))
       newVersionPath shouldBe "original/document/v1"
