@@ -3,7 +3,6 @@ package kind.onboarding
 import kind.onboarding.svc.*
 import kind.logic._
 import kind.logic.{as => jsonAs}
-import kind.logic.json._
 import ujson.Value.Value
 import upickle.default._
 import zio._

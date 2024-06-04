@@ -1,6 +1,6 @@
 package kind.onboarding.docstore
 
-import kind.onboarding.docstore.api.*
+import kind.onboarding.docstore.api._
 
 // TODO - write your business logic for your services here (the defaults all return 'not implemented'):
 val myDefaultService: DefaultService = ???
