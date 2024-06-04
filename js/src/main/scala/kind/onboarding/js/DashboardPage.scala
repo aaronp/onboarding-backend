@@ -15,7 +15,6 @@ case class DashboardPage(services: Services) {
   }
 
   def withdrawDraft(draftId: JS) = {
-    println(s"withdrawDraft(${draftId})")
     services.bff.withdraw(draftId.toString(), true).execOrThrow() match {
       case result: ActionResult => result.asJSON
       case Some(json)           => json.asJSON
