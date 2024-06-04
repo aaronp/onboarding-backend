@@ -55,6 +55,11 @@ jobs:
 
     - name: Build & Test Backend
       run: sbt "project appJVM" clean test
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        GITHUB_ACTOR: ${{ github.actor }}
+
     - name: Publish to GitHub Packages
       run: sbt publish
       env:
