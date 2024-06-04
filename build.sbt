@@ -66,12 +66,24 @@ ThisBuild / scalacOptions ++= Seq(
   "-Wunused:all"
 )
 
+
+val unmanagedJVM = sys.env.get("ACCESS_TOKEN").filter(_.nonEmpty).map { _ =>
+  val docstoreDir = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target"
+  (docstoreDir ** "*.jar").classpath
+}
+
+//    val schemaPomPath = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target" / "scala-3.4.1" / "kind-docstore_3-0.2.0.pom"
+
+
+
 lazy val app = crossProject(JSPlatform, JVMPlatform).in(file(".")).
   enablePlugins(BuildInfoPlugin).
   settings(commonSettings).
   jvmSettings(
+//    unmanagedJars in Compile ++= unmanagedJVM.toList,
     libraryDependencies ++= Seq(
       "kindservices" %%% "logic-first-jvm" % LogicFirstVersion, // <-- NOTE: this would be better in common settings, but we have a different suffix for jvm and JS
+
       "com.lihaoyi" %% "cask" % "0.9.2")
   ).
   jsSettings(
@@ -104,8 +116,21 @@ ThisBuild / publishTo := Some("GitHub Package Registry" at s"https://maven.pkg.g
 
 sys.env.get("ACCESS_TOKEN") match {
   case Some(token) if token.nonEmpty =>
+
+//    val schemaPomPath = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target" / "scala-3.4.1" / "kind-docstore_3-0.2.0.pom"
+    val docstoreDir = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target"
+
+    println(
+      s"""
+         |
+         |
+         |docstoreDir is $docstoreDir
+         |
+         |
+         |""".stripMargin)
+
     val actor = sys.env.get("GITHUB_ACTOR").getOrElse(githubUser)
-    println(s"\n\t\tBUILDING USING actor '$actor' and $token \n\n")
+
     ThisBuild / credentials += Credentials(
       "GitHub Package Registry",
       "maven.pkg.github.com",
