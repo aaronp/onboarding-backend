@@ -6,7 +6,17 @@ on:
       - '*'  # or your default branch
 
 jobs:
+  generate-models:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install -y make
+
+    - name: Run generateModels target
+      run: make generateModels
   publish:
+    needs: generate-models
     runs-on: ubuntu-latest
 
     steps:
