@@ -26,14 +26,23 @@ jobs:
     - name: Set up working directory
       run: mkdir -p $GITHUB_WORKSPACE/target/schemas/docstore/target/global-logging
 
-    - name: Run genModels script
+    - name: Generate openapi stubs
       run: |
-        echo "current directory is $PWD"
-        echo "$GITHUB_WORKSPACE is $$GITHUB_WORKSPACE"
         chmod +x ./genModels.sh
-        source ./genModels.sh && genModels
-      env:
-        TARGET_DIR: $GITHUB_WORKSPACE/target/schemas/docstore/target/global-logging
+        source ./genModels.sh && generate
+
+    - name: Change ownership of the target directory
+      run: |
+        echo "BEFORE:"
+        ls -Alrth $GITHUB_WORKSPACE/target/schemas
+        sudo chown -R $USER:$USER $GITHUB_WORKSPACE/target/schemas
+        echo "AFTER:"
+        ls -Alrth $GITHUB_WORKSPACE/target/schemas
+
+    - name: Publish the stubs locally
+      run: |
+        chmod +x ./genModels.sh
+        source ./genModels.sh && buildModels
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
