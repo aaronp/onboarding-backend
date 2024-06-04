@@ -12,12 +12,6 @@ val LogicFirstVersion = "0.6.0"
 val githubResolver = "GitHub Package Registry" at "https://maven.pkg.github.com/kindservices/logic-first"
 ThisBuild / resolvers += githubResolver
 
-credentials += Credentials("GitHub Package Registry",
-  "maven.pkg.github.com",
-  sys.env.getOrElse("GITHUB_ACTOR", ""),
-  sys.env.getOrElse("GITHUB_TOKEN", "")
-)
-
 
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
@@ -108,7 +102,7 @@ val githubUser = "aaronp"
 val githubRepo = "onboarding-backend"
 ThisBuild / publishTo := Some("GitHub Package Registry" at s"https://maven.pkg.github.com/$githubUser/$githubRepo")
 
-sys.env.get("GITHUB_TOKEN") match {
+sys.env.get("ACCESS_TOKEN") match {
   case Some(token) if token.nonEmpty =>
     ThisBuild / credentials += Credentials(
       "GitHub Package Registry",
