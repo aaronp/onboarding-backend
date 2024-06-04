@@ -6,7 +6,7 @@ on:
       - '*'  # or your default branch
 
 jobs:
-  generate-models:
+  build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -59,9 +59,11 @@ jobs:
     - name: Build & Test Backend
       run: sbt "project appJVM" clean test
     - name: Publish to GitHub Packages
+      run: sbt publish
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: sbt publish
+        GITHUB_ACTOR: ${{ github.actor }}
+
     - name: Get SBT version
       id: sbt_version
       run: echo "SBT_VERSION=$(sbt --no-colors 'show version' | tail -n 1 | awk '{print $2}')" >> $GITHUB_ENV
