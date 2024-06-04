@@ -67,10 +67,10 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 
-val unmanagedJVM = sys.env.get("ACCESS_TOKEN").filter(_.nonEmpty).map { _ =>
-  val docstoreDir = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target"
-  (docstoreDir ** "*.jar").classpath
-}
+//val unmanagedJVM = sys.env.get("ACCESS_TOKEN").filter(_.nonEmpty).map { _ =>
+//  val docstoreDir = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target"
+//  (docstoreDir ** "*.jar").classpath
+//}
 
 //    val schemaPomPath = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target" / "scala-3.4.1" / "kind-docstore_3-0.2.0.pom"
 
@@ -114,17 +114,20 @@ val githubUser = "aaronp"
 val githubRepo = "onboarding-backend"
 ThisBuild / publishTo := Some("GitHub Package Registry" at s"https://maven.pkg.github.com/$githubUser/$githubRepo")
 
+
 sys.env.get("ACCESS_TOKEN") match {
   case Some(token) if token.nonEmpty =>
 
 //    val schemaPomPath = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target" / "scala-3.4.1" / "kind-docstore_3-0.2.0.pom"
-    val docstoreDir = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target"
 
+    val docstoreDir = new java.io.File("./target/schemas/docstore/jvm/target")
     println(
       s"""
          |
          |
          |docstoreDir is $docstoreDir
+         |docstoreDir.exists = ${docstoreDir.exists()}
+         |docstoreDir.isDir = ${docstoreDir.isDirectory}
          |
          |
          |""".stripMargin)
