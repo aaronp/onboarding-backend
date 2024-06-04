@@ -1,6 +1,8 @@
 package kind.onboarding
 
+import kind.onboarding.svc.*
 import kind.logic._
+import kind.logic.{as => jsonAs}
 import kind.logic.json._
 import ujson.Value.Value
 import upickle.default._
@@ -72,5 +74,10 @@ package object js {
   }
   extension (json: ujson.Value) {
     def asJavascriptObject: js.Dynamic = JSON.parse(json.render(0))
+
+    def asHasApproved: Option[HasApproved] =
+      Try(json("data")).toOption.flatMap(_.jsonAs[HasApproved].toOption)
+    def asHasWithdrawn: Option[HasWithdrawn] =
+      Try(json("data")).toOption.flatMap(_.jsonAs[HasWithdrawn].toOption)
   }
 }

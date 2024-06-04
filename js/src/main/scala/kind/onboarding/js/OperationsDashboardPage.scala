@@ -16,10 +16,11 @@ case class OperationsDashboardPage(services: Services) {
       .listDrafts()
       .execOrThrow()
       .flatMap { draftData =>
-        draftData("data").as[HasApproved].toOption match {
-          case None                       => Option(draftData.asJSON)
-          case Some(doc) if !doc.approved => Option(draftData.asJSON)
-          case _                          => None
+        val withdrawn = draftData.asHasWithdrawn.fold(false)(_.withdrawn)
+        draftData.asHasApproved match {
+          case None if !withdrawn                       => Option(draftData.asJSON)
+          case Some(doc) if !doc.approved && !withdrawn => Option(draftData.asJSON)
+          case _                                        => None
         }
       }
       .toJSArray
