@@ -23,7 +23,6 @@ case class OnboardingPage(services: Services) {
   }
 
   def onSaveDraft(draft: JS) = {
-    println(s"onSaveDraft: ${draft.asJsonString}")
 
     draft.jsonAsUJson match {
       case Failure(err) =>

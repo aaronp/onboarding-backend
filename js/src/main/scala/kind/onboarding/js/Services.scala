@@ -20,7 +20,12 @@ import scala.util.control.NonFatal
 /** These are the 'convenience' functions made available to the front-end via 'createNewService'
   */
 @JSExportAll
-case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry: Telemetry) {
+case class Services(
+    databaseName: String,
+    database: Ref[PathTree],
+    bff: BackendForFrontend,
+    telemetry: Telemetry
+) {
 
   def asTree = database.get
 
@@ -56,6 +61,9 @@ case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry:
     dom.window.localStorage.setItem(name, value)
   }
 
+  def currentDatabaseName() = databaseName
+  def currentDatabase()     = LabeledValue(databaseName).asJSON
+
   def snapshotDatabase() = saveDatabaseAs("default")
 
   def listUsers() = bff.listUsers().getAsJS(_.toJSArray)
@@ -67,9 +75,31 @@ case class Services(database: Ref[PathTree], bff: BackendForFrontend, telemetry:
 
   def createNewUser(json: String): ActionResult =
     json.runWithJsonAs[User, ActionResult](bff.createNewUser)
+
+  def listDatabaseKeys() = Services.listDatabaseKeys(databaseName)
+
+  def reloadService(dbName: String): Services = Services.createServiceForName(dbName)
 }
 
 object Services {
+
+  /** @return
+    *   a list of Labeled Values (for use in a drop-down) for the database keys
+    */
+  def listDatabaseKeys(currentDb: String) = {
+    val keys = (0 until dom.window.localStorage.length).flatMap { i =>
+      val key = dom.window.localStorage.key(i)
+      // only include the keys which can be unmarshalled as PathTrees (our data)
+      readDatabase(key).filter(d => d.children.nonEmpty || !d.data.isNull).map { data =>
+        if (key == currentDb) {
+          LabeledValue(s"${key} (current)", key, key == currentDb).asJSON
+        } else {
+          LabeledValue(key).asJSON
+        }
+      }
+    }
+    keys.toJSArray
+  }
 
   def readDatabase(name: String): Option[PathTree] = {
     try {
@@ -82,13 +112,17 @@ object Services {
         None
     }
   }
+
   @JSExportTopLevel("createService")
-  def createService(): Services = {
+  def createService(): Services = createServiceForName("default")
+
+  @JSExportTopLevel("createServiceForName")
+  def createServiceForName(dbName: String): Services = {
     // it's OK to know about our local backend stuff here
     // as we'll swap out a 'real' backend which has a REST client
     // behind a similar function
     import kind.onboarding.docstore.*
-    val docStore: DocStoreHandler.InMemory = readDatabase("default") match {
+    val docStore: DocStoreHandler.InMemory = readDatabase(dbName) match {
       case Some(db) => DocStoreHandler(db)
       case None     => DocStoreHandler()
     }
@@ -97,6 +131,6 @@ object Services {
 
     val bff = BackendForFrontend(docStoreApi)(using telemetryInst)
 
-    new Services(docStore.ref, bff, telemetryInst)
+    new Services(dbName, docStore.ref, bff, telemetryInst)
   }
 }

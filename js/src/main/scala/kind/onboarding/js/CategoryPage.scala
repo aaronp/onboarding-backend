@@ -48,10 +48,13 @@ case class CategoryPage(services: Services) {
 
     // reload
     _allCategories = loadCategories()
+    selectedCategoryName = name
   }
 
   def onAddSubCategory(name: String) = {
     current = current.copy(subCategories = current.subCategories + name)
+
+    println(s"onAddSubCategory($name) from ${current.name}")
     updateCategory()
   }
 
@@ -64,8 +67,10 @@ case class CategoryPage(services: Services) {
     val newCategory = services.bff.updateCategory(current).execOrThrow()
     current = newCategory
     _allCategories = loadCategories()
+    selectedCategoryName = current.name
   }
   def selectedCategoryName_=(newValue: String): Unit = {
+    println(s"changing selected cat to $newValue from ${current.name}")
     _allCategories.find(_.name == newValue) match {
       case Some(found) => current = found
       case None        => current = Category("")
