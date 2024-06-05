@@ -57,14 +57,6 @@ jobs:
       id: sbt_version
       run: echo "SBT_VERSION=$(sbt --no-colors 'show version' | tail -n 1 | awk '{print $2}')" >> $GITHUB_ENV
 
-    - name: Debug Published JS Pom
-      run: |
-          cat $GITHUB_WORKSPACE/target/schemas/docstore/js/target/scala-3.4.1/kind-docstore_sjs1_3-0.2.0.pom
-
-    - name: Debug Published JVM Pom
-      run: |
-        cat $GITHUB_WORKSPACE/target/schemas/docstore/jvm/target/scala-3.4.1/kind-docstore_3-0.2.0.pom
-
     - name: Build & Test Backend
       run: sbt "project appJVM" clean test
       env:
@@ -72,12 +64,12 @@ jobs:
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         GITHUB_ACTOR: ${{ github.actor }}
 
-    - name: Publish
-      run: sbt publish
-      env:
-        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        GITHUB_ACTOR: ${{ github.actor }}
+#    - name: Publish
+#      run: sbt publish
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+#        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+#        GITHUB_ACTOR: ${{ github.actor }}
 
     - name: Set up Git user
       run: |
