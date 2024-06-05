@@ -116,7 +116,7 @@ sys.env.get("ACCESS_TOKEN") match {
 
     val actor = sys.env.get("GITHUB_ACTOR").getOrElse(githubUser)
 
-    printlns(s"""
+    println(s"""
     
     
 
