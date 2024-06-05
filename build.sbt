@@ -10,8 +10,6 @@ ThisBuild / versionScheme := Some("early-semver")
 
 val LogicFirstVersion = "0.6.0"
 val githubResolver = "GitHub Package Registry" at "https://maven.pkg.github.com/kindservices/logic-first"
-ThisBuild / resolvers += githubResolver
-
 
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
