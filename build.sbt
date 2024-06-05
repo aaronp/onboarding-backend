@@ -43,40 +43,6 @@ import Keys._
 import java.nio.file.{Files, Paths}
 import java.nio.charset.StandardCharsets
 
-/**
- * Our generated openapi code will publish jars to github packages by default.
- *
- * This little hack-schen changes that code to publish locally
- */
-lazy val replacePublishMavenStyle = taskKey[Unit]("Replace publishTo target for generated openapi code in its build.sbt")
-
-replacePublishMavenStyle := {
-  val buildFile = baseDirectory.value / "target" / "schemas" / "docstore" / "build.sbt"
-
-  if (Files.exists(buildFile.toPath)) {
-    val content = new String(Files.readAllBytes(buildFile.toPath), StandardCharsets.UTF_8)
-    val newContent = {
-      val oldText = "ThisBuild / publishMavenStyle := true"
-      val newText = "ThisBuild / publishMavenStyle := false"
-      val updatedMavenStyle = content.replace(oldText, newText)
-
-      // also update the 'publishTo'
-      val newPublishTo = """ThisBuild / publishTo := Some("Local Ivy2 Repository" at "file://" + Path.userHome.absolutePath + "/.ivy2/local")"""
-      val textToReplace = """ThisBuild / publishTo := Some("GitHub Package Registry" at s"https://maven.pkg.github.com/$githubUser/$githubRepo")"""
-      updatedMavenStyle.replace(textToReplace, newPublishTo)
-    }
-
-    println(s"New $buildFile is:\n${newContent}\n\n")
-
-    Files.write(buildFile.toPath, newContent.getBytes(StandardCharsets.UTF_8))
-    streams.value.log.info(s"Updated '${buildFile.toPath}'")
-  } else {
-    streams.value.log.error(s"File not found: '${buildFile.toPath}'")
-  }
-}
-
-
-
 
 // Common settings
 lazy val commonSettings = Seq(
@@ -148,26 +114,21 @@ ThisBuild / publishTo := Some("GitHub Package Registry" at s"https://maven.pkg.g
 sys.env.get("ACCESS_TOKEN") match {
   case Some(token) if token.nonEmpty =>
 
-//    val schemaPomPath = baseDirectory.value / "target" / "schemas" / "docstore" / "jvm" / "target" / "scala-3.4.1" / "kind-docstore_3-0.2.0.pom"
-
-    val docstoreDir = new java.io.File("./target/schemas/docstore/jvm/target")
-    println(
-      s"""
-         |
-         |
-         |docstoreDir is $docstoreDir
-         |docstoreDir.exists = ${docstoreDir.exists()}
-         |docstoreDir.isDir = ${docstoreDir.isDirectory}
-         |
-         |
-         |""".stripMargin)
-
     val actor = sys.env.get("GITHUB_ACTOR").getOrElse(githubUser)
+
+    printlns(s"""
+    
+    
+
+    githubUser is $githubUser
+    actor is $actor
+    
+    """)
 
     ThisBuild / credentials += Credentials(
       "GitHub Package Registry",
       "maven.pkg.github.com",
-      actor,
+      githubUser,
       token
     )
   case _ =>
