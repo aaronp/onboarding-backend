@@ -81,3 +81,7 @@ jobs:
     
     - name: Push tag
       run: git push origin v${{ env.SBT_VERSION }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        GITHUB_ACTOR: ${{ github.actor }}
