@@ -1,7 +1,7 @@
 import org.scalajs.linker.interface.ModuleKind
 import org.scalajs.linker.interface.OutputPatterns
 
-ThisBuild / organization := "kind"
+ThisBuild / organization := "com.github.aaronp"
 ThisBuild / name := "onboarding-backend"
 ThisBuild / version := "0.0.1"
 ThisBuild / scalaVersion := "3.4.1"
@@ -31,9 +31,6 @@ ThisBuild / version := {
   else
     s"$baseVersion-SNAPSHOT"
 }
-
-ThisBuild / buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
-ThisBuild / buildInfoPackage := "kind.onboarding.backend.buildinfo"
 
 addCommandAlias("removeUnusedImports", ";scalafix RemoveUnused")
 addCommandAlias("organiseImports", ";scalafix OrganizeImports")
@@ -114,17 +111,7 @@ ThisBuild / publishTo := Some("GitHub Package Registry" at s"https://maven.pkg.g
 sys.env.get("ACCESS_TOKEN") match {
   case Some(token) if token.nonEmpty =>
 
-    val actor = sys.env.get("GITHUB_ACTOR").getOrElse(githubUser)
-
-    println(s"""
-    
-    
-
-    githubUser is $githubUser
-    actor is $actor
-    
-    """)
-
+    val actor = sys.env.getOrElse("GITHUB_ACTOR", githubUser)
     ThisBuild / credentials += Credentials(
       "GitHub Package Registry",
       "maven.pkg.github.com",
@@ -134,4 +121,28 @@ sys.env.get("ACCESS_TOKEN") match {
   case _ =>
     println("\n\t\tACCESS_TOKEN not set - assuming a local build\n\n")
     credentials ++= Nil
+}
+
+
+// see https://leonard.io/blog/2017/01/an-in-depth-guide-to-deploying-to-maven-central/
+pomIncludeRepository := (_ => false)
+
+// To sync with Maven central, you need to supply the following information:
+Global / pomExtra := {
+  <url>https://github.com/aaronp/onboarding-backend</url>
+    <licenses>
+      <license>
+        <name>Apache 2</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      </license>
+    </licenses>
+    <developers>
+      <developer>
+        <id>
+          aaronp
+        </id>
+        <name>Aaron Pritzlaff</name>
+        <url>https://github.com/aaronp/onboarding-backend</url>
+      </developer>
+    </developers>
 }
